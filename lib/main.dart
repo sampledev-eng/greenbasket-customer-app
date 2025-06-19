@@ -1,50 +1,66 @@
-
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 void main() {
-  runApp(GreenBasketApp());
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: ThemeData(primarySwatch: Colors.green),
+    home: LoginPage(),
+  ));
 }
 
-class GreenBasketApp extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'GreenBasket',
-      theme: ThemeData(primarySwatch: Colors.green),
-      home: SplashScreen(),
-    );
-  }
+  _LoginPageState createState() => _LoginPageState();
 }
 
-class SplashScreen extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    Future.delayed(Duration(seconds: 2), () {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
-      );
-    });
-
-    return Scaffold(
-      backgroundColor: Colors.green,
-      body: Center(
-        child: Text(
-          'GreenBasket',
-          style: TextStyle(fontSize: 32, color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
-}
-
-class LoginPage extends StatelessWidget {
+class _LoginPageState extends State<LoginPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool loading = false;
 
-  void login(BuildContext context) {
-    // TODO: Implement actual API call and token storage
-    Navigator.push(context, MaterialPageRoute(builder: (_) => ProductsPage()));
+  Future<void> login(BuildContext context) async {
+    setState(() => loading = true);
+    final loginUrl = Uri.parse('https://super-fiesta-r4xp7vxqvp9pfr74-8000.app.github.dev/login');
+
+    final response = await http.post(
+      loginUrl,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'username': emailController.text,
+        'password': passwordController.text,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final token = json.decode(response.body)['access_token'];
+
+      final productsUrl = Uri.parse('https://super-fiesta-r4xp7vxqvp9pfr74-8000.app.github.dev/products');
+      final productsResponse = await http.get(
+        productsUrl,
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (productsResponse.statusCode == 200) {
+        final products = json.decode(productsResponse.body);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => ProductsPage(products: products)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text("Failed to load products"),
+        ));
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Login failed: ${response.body}"),
+      ));
+    }
+    setState(() => loading = false);
   }
 
   @override
@@ -58,7 +74,10 @@ class LoginPage extends StatelessWidget {
             TextField(controller: emailController, decoration: InputDecoration(labelText: "Email")),
             TextField(controller: passwordController, decoration: InputDecoration(labelText: "Password"), obscureText: true),
             SizedBox(height: 20),
-            ElevatedButton(onPressed: () => login(context), child: Text("Login"))
+            ElevatedButton(
+              onPressed: loading ? null : () => login(context),
+              child: loading ? CircularProgressIndicator(color: Colors.white) : Text("Login"),
+            ),
           ],
         ),
       ),
@@ -67,11 +86,8 @@ class LoginPage extends StatelessWidget {
 }
 
 class ProductsPage extends StatelessWidget {
-  final List<Map<String, dynamic>> products = [
-    {"name": "Apple", "price": 1.5},
-    {"name": "Milk", "price": 0.99},
-    {"name": "Tomato", "price": 0.5}
-  ];
+  final List<dynamic> products;
+  ProductsPage({required this.products});
 
   @override
   Widget build(BuildContext context) {
