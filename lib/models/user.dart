@@ -1,1 +1,5 @@
-// user.dart placeholder
+class User {
+  final String username;
+
+  User(this.username);
+}
