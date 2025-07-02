@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
@@ -14,12 +15,12 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _username = TextEditingController();
   final _password = TextEditingController();
-  final _auth = AuthService();
   bool _loading = false;
 
   Future<void> _login() async {
     setState(() => _loading = true);
-    final success = await _auth.login(_username.text, _password.text);
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final success = await auth.login(_username.text, _password.text);
     setState(() => _loading = false);
     if (success) {
       Navigator.pushReplacement(

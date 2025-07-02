@@ -7,11 +7,12 @@
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:greenbasket/main.dart';
+import 'package:greenbasket/services/api_client.dart';
 import 'package:flutter/material.dart';
 
 void main() {
   testWidgets('Login screen loads', (WidgetTester tester) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(MyApp(client: ApiClient()));
     expect(find.text('Login'), findsOneWidget);
   });
 }

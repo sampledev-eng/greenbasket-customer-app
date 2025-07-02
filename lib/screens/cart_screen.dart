@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../models/cart_item.dart';
 import '../services/cart_service.dart';
 import '../services/order_service.dart';
+import '../services/api_client.dart';
 import 'thank_you_screen.dart';
 
 class CartScreen extends StatelessWidget {
@@ -41,7 +42,8 @@ class CartScreen extends StatelessWidget {
                     onPressed: cart.items.isEmpty
                         ? null
                         : () async {
-                            final service = OrderService();
+                            final client = Provider.of<ApiClient>(context, listen: false);
+                            final service = OrderService(client);
                             final order = await service.createOrder('123 Street', 'COD');
                             if (order != null && context.mounted) {
                               Navigator.push(

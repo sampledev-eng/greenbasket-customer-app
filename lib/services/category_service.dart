@@ -2,7 +2,8 @@ import '../models/category.dart';
 import 'api_client.dart';
 
 class CategoryService {
-  final ApiClient _client = ApiClient();
+  final ApiClient _client;
+  CategoryService(this._client);
 
   Future<List<Category>> fetchCategories() async {
     final data = await _client.get('/categories/');

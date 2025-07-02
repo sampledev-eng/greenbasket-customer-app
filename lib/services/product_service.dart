@@ -2,7 +2,8 @@ import '../models/product.dart';
 import 'api_client.dart';
 
 class ProductService {
-  final ApiClient _client = ApiClient();
+  final ApiClient _client;
+  ProductService(this._client);
 
   Future<List<Product>> fetchProducts() async {
     final data = await _client.get('/products/');

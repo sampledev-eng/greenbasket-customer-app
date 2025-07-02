@@ -3,7 +3,8 @@ import '../models/backend_order.dart';
 import 'api_client.dart';
 
 class OrderService {
-  final ApiClient _client = ApiClient();
+  final ApiClient _client;
+  OrderService(this._client);
   final List<BackendOrder> _orders = [];
 
   List<BackendOrder> get orders => List.unmodifiable(_orders);

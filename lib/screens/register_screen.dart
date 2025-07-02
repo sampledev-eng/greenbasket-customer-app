@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
 
@@ -13,12 +14,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _username = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
-  final AuthService _auth = AuthService();
   bool _loading = false;
 
   Future<void> _register() async {
     setState(() => _loading = true);
-    final success = await _auth.register(
+    final auth = Provider.of<AuthService>(context, listen: false);
+    final success = await auth.register(
         _username.text, _email.text, _password.text);
     setState(() => _loading = false);
     if (success) {

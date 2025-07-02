@@ -3,7 +3,12 @@ import 'package:http/http.dart' as http;
 
 class ApiClient {
   static const String baseUrl = 'https://greenbasket-backend.onrender.com';
+  final http.Client _client;
   String? _token;
+
+  ApiClient({http.Client? httpClient}) : _client = httpClient ?? http.Client();
+
+  String? get token => _token;
 
   void updateToken(String? token) {
     _token = token;
@@ -20,14 +25,14 @@ class ApiClient {
   }
 
   Future<dynamic> get(String path) async {
-    final response = await http.get(_uri(path), headers: _headers());
+    final response = await _client.get(_uri(path), headers: _headers());
     _check(response);
     return json.decode(response.body);
   }
 
   Future<dynamic> post(String path, Map<String, dynamic> data) async {
     final response =
-        await http.post(_uri(path), headers: _headers(), body: json.encode(data));
+        await _client.post(_uri(path), headers: _headers(), body: json.encode(data));
     _check(response);
     return json.decode(response.body);
   }

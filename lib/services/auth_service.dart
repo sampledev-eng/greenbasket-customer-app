@@ -2,7 +2,8 @@ import '../models/user.dart';
 import 'api_client.dart';
 
 class AuthService {
-  final ApiClient _client = ApiClient();
+  final ApiClient _client;
+  AuthService(this._client);
   User? _user;
 
   User? get currentUser => _user;

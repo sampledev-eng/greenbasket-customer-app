@@ -4,6 +4,7 @@ import '../models/product.dart';
 import '../services/cart_service.dart';
 import '../services/product_service.dart';
 import '../services/category_service.dart';
+import '../services/api_client.dart';
 import '../models/category.dart';
 import 'cart_screen.dart';
 import 'product_detail.dart';
@@ -17,8 +18,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final ProductService _productService = ProductService();
-  final CategoryService _categoryService = CategoryService();
+  late final ProductService _productService;
+  late final CategoryService _categoryService;
   final TextEditingController _search = TextEditingController();
   late Future<List<Product>> _productsFuture;
   List<Category> _categories = [];
@@ -27,6 +28,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    final client = Provider.of<ApiClient>(context, listen: false);
+    _productService = ProductService(client);
+    _categoryService = CategoryService(client);
     _productsFuture = _load();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cart = Provider.of<CartService>(context, listen: false);
