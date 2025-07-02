@@ -72,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     Text('Welcome to GreenBasket',
                         style: Theme.of(context)
                             .textTheme
-                            .headline6
+                            .titleLarge
                             ?.copyWith(color: Theme.of(context).colorScheme.primary)),
                     const SizedBox(height: 16),
                     TextField(

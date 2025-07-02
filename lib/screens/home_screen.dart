@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 import 'dart:async';
 import '../models/product.dart';
 import '../services/cart_service.dart';
@@ -128,21 +127,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: CarouselSlider(
-                  items: [
-                    'https://via.placeholder.com/400x150.png?text=Offer+1',
-                    'https://via.placeholder.com/400x150.png?text=Offer+2',
-                    'https://via.placeholder.com/400x150.png?text=Offer+3',
-                  ]
-                      .map((url) => ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(url, fit: BoxFit.cover, width: double.infinity),
-                          ))
-                      .toList(),
-                  options: CarouselOptions(height: 150, autoPlay: true),
-                ),
-              ),
+  padding: const EdgeInsets.symmetric(vertical: 8),
+  child: SizedBox(
+    height: 150,
+    child: PageView(
+      children: [
+        'https://via.placeholder.com/400x150.png?text=Offer+1',
+        'https://via.placeholder.com/400x150.png?text=Offer+2',
+        'https://via.placeholder.com/400x150.png?text=Offer+3',
+      ].map((url) => ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(url, fit: BoxFit.cover),
+          ))
+        .toList(),
+    ),
+  ),
+),
               SizedBox(
                 height: 100,
                 child: ListView(
@@ -193,13 +193,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             Padding(
                               padding: const EdgeInsets.all(4.0),
                               child: Text(product.name,
-                                  style: Theme.of(context).textTheme.bodyText1),
+                                  style: Theme.of(context).textTheme.bodyLarge),
                             ),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 4),
                               child: Text(
                                 '\$${product.price.toStringAsFixed(2)}',
-                                style: Theme.of(context).textTheme.subtitle1,
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
                             ),
                             IconButton(
