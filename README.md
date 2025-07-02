@@ -1,6 +1,8 @@
 # greenbasket
 
-A new Flutter project.
+This is a demo e-commerce Flutter application inspired by the BigBasket app.
+It features an OTP based login flow, bottom navigation with cart and orders,
+a colorful theme, search with debounce and a grid product catalogue.
 
 ## Getting Started
 
