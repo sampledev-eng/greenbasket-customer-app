@@ -26,22 +26,27 @@ class ApiClient {
   }
 
   Future<dynamic> post(String path, Map<String, dynamic> data) async {
-    final response = await http.post(_uri(path),
-        headers: _headers(), body: json.encode(data));
+    final response =
+        await http.post(_uri(path), headers: _headers(), body: json.encode(data));
     _check(response);
     return json.decode(response.body);
   }
 
+  void _check(http.Response res) {
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception('Request failed: ${res.statusCode}');
+    }
+  }
+
   // High level helpers for backend endpoints
-  Future<dynamic> register(
-      String username, String email, String password) async {
+  Future<dynamic> register(String username, String email, String password) async {
     return post('/auth/register',
         {'username': username, 'email': email, 'password': password});
   }
 
   Future<dynamic> login(String username, String password) async {
-    final data = await post('/auth/login',
-        {'username': username, 'password': password});
+    final data =
+        await post('/auth/login', {'username': username, 'password': password});
     if (data is Map && data.containsKey('access_token')) {
       updateToken(data['access_token']);
     }
@@ -50,13 +55,8 @@ class ApiClient {
 
   Future<List<dynamic>> products() async => await get('/products/');
 
-  Future<dynamic> addProduct(
-      String name,
-      String description,
-      double price,
-      int stock,
-      int categoryId,
-      String imageUrl) async {
+  Future<dynamic> addProduct(String name, String description, double price,
+      int stock, int categoryId, String imageUrl) async {
     return post('/products/', {
       'name': name,
       'description': description,
@@ -72,16 +72,18 @@ class ApiClient {
 
   Future<List<dynamic>> fetchCart() async => await get('/cart/');
 
-  Future<dynamic> createOrder(String address, String paymentMode) async => await
-      post('/orders/create', {'address': address, 'payment_mode': paymentMode});
+  Future<dynamic> createOrder(String address, String paymentMode) async =>
+      await post('/orders/create',
+          {'address': address, 'payment_mode': paymentMode});
 
   Future<List<dynamic>> orders() async => await get('/orders/');
 
   Future<dynamic> trackDelivery(int orderId) async =>
       await get('/delivery/track/$orderId');
 
-  Future<dynamic> initiatePayment(int orderId, double amount) async => await post(
-      '/payments/initiate', {'order_id': orderId, 'amount': amount});
+  Future<dynamic> initiatePayment(int orderId, double amount) async =>
+      await post('/payments/initiate',
+          {'order_id': orderId, 'amount': amount});
 
   Future<dynamic> getCurrentUser() async => await get('/users/me');
 
@@ -91,10 +93,4 @@ class ApiClient {
       await post('/categories/', {'name': name});
 
   Future<dynamic> seed() async => await post('/seed', {});
-
-  void _check(http.Response res) {
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      throw Exception('Request failed: ${res.statusCode}');
-    }
-  }
 }
