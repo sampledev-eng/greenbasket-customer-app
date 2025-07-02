@@ -19,7 +19,7 @@ class ProductDetail extends StatelessWidget {
           children: [
             Image.network(product.imageUrl, height: 200),
             const SizedBox(height: 16),
-            Text(product.name, style: Theme.of(context).textTheme.headline6),
+            Text(product.name, style: Theme.of(context).textTheme.titleLarge),
             Text('\$${product.price.toStringAsFixed(2)}'),
             const SizedBox(height: 16),
             Text(product.description),
