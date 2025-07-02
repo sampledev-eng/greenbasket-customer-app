@@ -25,8 +25,8 @@ class ProductDetail extends StatelessWidget {
             Text(product.description),
             const Spacer(),
             ElevatedButton(
-              onPressed: () {
-                cart.add(product);
+              onPressed: () async {
+                await cart.add(product);
                 Navigator.pop(context);
               },
               child: const Text('Add to Cart'),

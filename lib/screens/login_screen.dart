@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
+import 'register_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -52,6 +54,32 @@ class _LoginScreenState extends State<LoginScreen> {
               child: _loading
                   ? const CircularProgressIndicator()
                   : const Text('Login'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const ForgotPasswordScreen()));
+              },
+              child: const Text('Forgot password?'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const RegisterScreen()));
+              },
+              child: const Text('Create account'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const HomeScreen()));
+              },
+              child: const Text('Continue as Guest'),
             ),
           ],
         ),
