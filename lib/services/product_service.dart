@@ -11,6 +11,13 @@ class ProductService {
         .toList();
   }
 
+  Future<List<Product>> searchProducts(String query) async {
+    final data = await _client.get('/products?search=$query');
+    return (data as List)
+        .map((e) => Product.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<Product> createProduct(
       {required String name,
       required String description,
