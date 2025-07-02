@@ -121,8 +121,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               ...filtered.map((product) => ListTile(
-                    leading:
-                        Image.network(product.imageUrl, width: 50, height: 50),
+                    leading: Image.network(
+                      product.imageUrl,
+                      width: 50,
+                      height: 50,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.broken_image, size: 50),
+                    ),
                     title: Text(product.name),
                     subtitle: Text('\$${product.price.toStringAsFixed(2)}'),
                     onTap: () => Navigator.push(
