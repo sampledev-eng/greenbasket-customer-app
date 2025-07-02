@@ -53,6 +53,12 @@ class ApiClient {
     return data;
   }
 
+  Future<dynamic> requestOtp(String phone) async =>
+      await post('/auth/request-otp', {'phone': phone});
+
+  Future<dynamic> verifyOtp(String phone, String code) async =>
+      await post('/auth/verify-otp', {'phone': phone, 'code': code});
+
   Future<List<dynamic>> products() async => await get('/products/');
 
   Future<dynamic> addProduct(String name, String description, double price,
@@ -69,6 +75,13 @@ class ApiClient {
 
   Future<dynamic> addCart(int productId, int quantity) async =>
       await post('/cart/add', {'product_id': productId, 'quantity': quantity});
+
+  Future<dynamic> updateCart(int productId, int quantity) async =>
+      await post('/cart/update',
+          {'product_id': productId, 'quantity': quantity});
+
+  Future<dynamic> removeCart(int productId) async =>
+      await post('/cart/remove', {'product_id': productId});
 
   Future<List<dynamic>> fetchCart() async => await get('/cart/');
 

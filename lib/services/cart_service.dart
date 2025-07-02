@@ -42,7 +42,21 @@ class CartService extends ChangeNotifier {
     notifyListeners();
   }
 
-  void remove(CartItem item) {
+  Future<void> updateQuantity(CartItem item, int qty) async {
+    await _client.updateCart(item.product.id, qty);
+    if (qty <= 0) {
+      _items.remove(item);
+    } else {
+      final index = _items.indexOf(item);
+      if (index >= 0) {
+        _items[index].quantity = qty;
+      }
+    }
+    notifyListeners();
+  }
+
+  Future<void> remove(CartItem item) async {
+    await _client.removeCart(item.product.id);
     _items.remove(item);
     notifyListeners();
   }

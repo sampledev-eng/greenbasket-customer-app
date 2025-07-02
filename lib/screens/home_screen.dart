@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:carousel_slider/carousel_slider.dart';
+import 'dart:async';
 import '../models/product.dart';
 import '../services/cart_service.dart';
 import '../services/product_service.dart';
@@ -20,6 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ProductService _productService = ProductService();
   final CategoryService _categoryService = CategoryService();
   final TextEditingController _search = TextEditingController();
+  Timer? _debounce;
   late Future<List<Product>> _productsFuture;
   List<Category> _categories = [];
   List<Product> _allProducts = [];
@@ -44,7 +47,22 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _search.dispose();
+    _debounce?.cancel();
     super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () async {
+      final future = value.isEmpty
+          ? _productService.fetchProducts()
+          : _productService.searchProducts(value);
+      final results = await future;
+      if (!mounted) return;
+      setState(() {
+        _allProducts = results;
+      });
+    });
   }
 
   @override
@@ -85,13 +103,14 @@ class _HomeScreenState extends State<HomeScreen> {
       body: FutureBuilder<List<Product>>(
         future: _productsFuture,
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (snapshot.connectionState == ConnectionState.waiting &&
+              _allProducts.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (!snapshot.hasData) {
+          final products = _allProducts;
+          if (products.isEmpty) {
             return const Center(child: Text('No products'));
           }
-          final products = snapshot.data!;
           final filtered = products
               .where((p) => p.name
                   .toLowerCase()
@@ -105,7 +124,23 @@ class _HomeScreenState extends State<HomeScreen> {
                   controller: _search,
                   decoration: const InputDecoration(
                       hintText: 'Search products', prefixIcon: Icon(Icons.search)),
-                  onChanged: (_) => setState(() {}),
+                  onChanged: _onSearchChanged,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: CarouselSlider(
+                  items: [
+                    'https://via.placeholder.com/400x150.png?text=Offer+1',
+                    'https://via.placeholder.com/400x150.png?text=Offer+2',
+                    'https://via.placeholder.com/400x150.png?text=Offer+3',
+                  ]
+                      .map((url) => ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(url, fit: BoxFit.cover, width: double.infinity),
+                          ))
+                      .toList(),
+                  options: CarouselOptions(height: 150, autoPlay: true),
                 ),
               ),
               SizedBox(
@@ -120,21 +155,64 @@ class _HomeScreenState extends State<HomeScreen> {
                       .toList(),
                 ),
               ),
-              ...filtered.map((product) => ListTile(
-                    leading:
-                        Image.network(product.imageUrl, width: 50, height: 50),
-                    title: Text(product.name),
-                    subtitle: Text('\$${product.price.toStringAsFixed(2)}'),
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => ProductDetail(product: product)),
-                    ),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.add_shopping_cart),
-                      onPressed: () async => cart.add(product),
-                    ),
-                  ))
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: filtered.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                      childAspectRatio: 0.7),
+                  itemBuilder: (context, index) {
+                    final product = filtered[index];
+                    return GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => ProductDetail(product: product)),
+                      ),
+                      child: Card(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Image.network(
+                                product.imageUrl,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                                semanticLabel: product.name,
+                                errorBuilder: (_, __, ___) => const Icon(
+                                    Icons.broken_image,
+                                    size: 48,
+                                    color: Colors.grey),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(4.0),
+                              child: Text(product.name,
+                                  style: Theme.of(context).textTheme.bodyText1),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
+                              child: Text(
+                                '\$${product.price.toStringAsFixed(2)}',
+                                style: Theme.of(context).textTheme.subtitle1,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.add_shopping_cart),
+                              onPressed: () async => cart.add(product),
+                            )
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              )
             ],
           );
         },
