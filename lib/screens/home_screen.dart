@@ -3,8 +3,11 @@ import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
 import '../services/product_service.dart';
+import '../services/category_service.dart';
+import '../models/category.dart';
 import 'cart_screen.dart';
 import 'product_detail.dart';
+import 'order_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -15,12 +18,33 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final ProductService _productService = ProductService();
+  final CategoryService _categoryService = CategoryService();
+  final TextEditingController _search = TextEditingController();
   late Future<List<Product>> _productsFuture;
+  List<Category> _categories = [];
+  List<Product> _allProducts = [];
 
   @override
   void initState() {
     super.initState();
-    _productsFuture = _productService.fetchProducts();
+    _productsFuture = _load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cart = Provider.of<CartService>(context, listen: false);
+      cart.load();
+    });
+  }
+
+  Future<List<Product>> _load() async {
+    final products = await _productService.fetchProducts();
+    _allProducts = products;
+    _categories = await _categoryService.fetchCategories();
+    return products;
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
   }
 
   @override
@@ -50,6 +74,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             onPressed: () => Navigator.push(
                 context, MaterialPageRoute(builder: (_) => const CartScreen())),
+          ),
+          IconButton(
+            icon: const Icon(Icons.receipt_long),
+            onPressed: () => Navigator.push(
+                context, MaterialPageRoute(builder: (_) => const OrderScreen())),
           )
         ],
       ),
@@ -63,25 +92,50 @@ class _HomeScreenState extends State<HomeScreen> {
             return const Center(child: Text('No products'));
           }
           final products = snapshot.data!;
-          return ListView.builder(
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return ListTile(
-                leading: Image.network(product.imageUrl, width: 50, height: 50),
-                title: Text(product.name),
-                subtitle: Text('\$${product.price.toStringAsFixed(2)}'),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => ProductDetail(product: product)),
+          final filtered = products
+              .where((p) => p.name
+                  .toLowerCase()
+                  .contains(_search.text.toLowerCase()))
+              .toList();
+          return ListView(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: TextField(
+                  controller: _search,
+                  decoration: const InputDecoration(
+                      hintText: 'Search products', prefixIcon: Icon(Icons.search)),
+                  onChanged: (_) => setState(() {}),
                 ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.add_shopping_cart),
-                  onPressed: () => cart.add(product),
+              ),
+              SizedBox(
+                height: 100,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: _categories
+                      .map((c) => Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Chip(label: Text(c.name)),
+                          ))
+                      .toList(),
                 ),
-              );
-            },
+              ),
+              ...filtered.map((product) => ListTile(
+                    leading:
+                        Image.network(product.imageUrl, width: 50, height: 50),
+                    title: Text(product.name),
+                    subtitle: Text('\$${product.price.toStringAsFixed(2)}'),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => ProductDetail(product: product)),
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(Icons.add_shopping_cart),
+                      onPressed: () async => cart.add(product),
+                    ),
+                  ))
+            ],
           );
         },
       ),
