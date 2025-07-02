@@ -1,92 +1,38 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>GreenBasket - Login</title>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
 
-  <!-- IMPORTANT for GitHub Pages sub-folder hosting -->
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
   <base href="/greenbasket-customer-app/">
 
-  <!-- Google font -->
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
 
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box;font-family:'Nunito',sans-serif}
-    body{
-      background:url('https://images.unsplash.com/photo-1606788075761-8093cba5e233?auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
-      background-size:cover;display:flex;justify-content:center;align-items:center;height:100vh;animation:fadeIn 1.2s ease-in}
-    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-    .login-box{background:rgba(255,255,255,.92);padding:40px;border-radius:20px;width:100%;max-width:400px;
-      box-shadow:0 10px 25px rgba(0,0,0,.2);text-align:center}
-    .login-box h2{margin-bottom:25px;color:#2e7d32;font-size:28px}
-    .login-box input{width:100%;padding:14px 16px;margin-bottom:20px;border:1px solid #ccc;border-radius:12px;font-size:16px;transition:border .3s}
-    .login-box input:focus{border-color:#43a047;outline:none}
-    .login-box button{background:#43a047;color:#fff;padding:12px 22px;border:none;border-radius:12px;font-size:16px;cursor:pointer;width:100%;transition:background .3s}
-    .login-box button:hover{background:#388e3c}
-    .footer{margin-top:15px;font-size:14px;color:#666}
-    .error-msg{color:#d32f2f;margin-bottom:15px;font-size:14px}
-  </style>
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="greenbasket">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>greenbasket</title>
+  <link rel="manifest" href="manifest.json">
 </head>
 <body>
-  <div class="login-box">
-    <h2>Welcome to GreenBasket</h2>
-
-    <form id="loginForm">
-      <div id="err" class="error-msg" style="display:none;"></div>
-      <input id="user" type="text" placeholder="Username" required />
-      <input id="pass" type="password" placeholder="Password" required />
-      <button type="submit" id="submitBtn">Login</button>
-    </form>
-
-    <div class="footer">
-      New user? <a href="#" style="color:#2e7d32;text-decoration:none;">Sign up</a>
-    </div>
-  </div>
-
-  <script>
-    const form      = document.getElementById('loginForm');
-    const userField = document.getElementById('user');
-    const passField = document.getElementById('pass');
-    const errBox    = document.getElementById('err');
-    const submitBtn = document.getElementById('submitBtn');
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      errBox.style.display = 'none';
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Logging in…';
-
-      try {
-        const response = await fetch('https://greenbasket-backend.onrender.com/auth/login', {
-          method: 'POST',
-          headers: {'Content-Type':'application/x-www-form-urlencoded'},
-          body: new URLSearchParams({
-            username: userField.value.trim(),
-            password: passField.value
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error('Invalid credentials');
-        }
-
-        const data = await response.json();
-        // Store token in localStorage (optional)
-        localStorage.setItem('access_token', data.access_token);
-
-        alert('Login successful!');
-        // Redirect to your app's home page (adjust if needed)
-        window.location.href = './home.html';
-
-      } catch (err) {
-        errBox.textContent = err.message || 'Login failed';
-        errBox.style.display = 'block';
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Login';
-      }
-    });
-  </script>
+  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
