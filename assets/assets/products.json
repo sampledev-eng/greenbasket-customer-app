@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "Apples",
+    "price": 2.99,
+    "description": "Fresh red apples",
+    "imageUrl": "https://via.placeholder.com/150"
+  },
+  {
+    "id": 2,
+    "name": "Bananas",
+    "price": 1.49,
+    "description": "Sweet bananas",
+    "imageUrl": "https://via.placeholder.com/150"
+  },
+  {
+    "id": 3,
+    "name": "Carrots",
+    "price": 0.99,
+    "description": "Organic carrots",
+    "imageUrl": "https://via.placeholder.com/150"
+  }
+]
