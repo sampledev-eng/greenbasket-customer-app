@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import 'main_screen.dart';
-import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 import 'otp_screen.dart';
 
@@ -33,8 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (_) => const MainScreen()));
     } else if (result == AuthResult.unauthorized) {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => const RegisterScreen()));
+      Navigator.pushReplacementNamed(context, '/register');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Invalid credentials')),
@@ -113,13 +111,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: const Text('Login with OTP'),
                     ),
                     TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const RegisterScreen()));
-                      },
-                      child: const Text('Sign up'),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/register'),
+                      child: const Text('New user? Sign up',
+                          style: TextStyle(color: Colors.green)),
                     ),
                     TextButton(
                       onPressed: () {

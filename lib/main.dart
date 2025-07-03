@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'screens/login_screen.dart';
+import 'screens/register_screen.dart';
 import 'services/cart_service.dart';
 import 'services/auth_service.dart';
 
@@ -22,14 +23,15 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'GreenBasket',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF6AA84F),
-            primary: const Color(0xFF6AA84F),
-            secondary: const Color(0xFFF44336),
-          ),
+          colorScheme:
+              ColorScheme.fromSeed(seedColor: const Color(0xFF6AA84F)),
           textTheme: GoogleFonts.poppinsTextTheme(),
         ),
         home: const LoginScreen(),
+        routes: {
+          '/login': (_) => const LoginScreen(),
+          '/register': (_) => const RegisterScreen(),
+        },
       ),
     );
   }
