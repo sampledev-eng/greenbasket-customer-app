@@ -105,6 +105,31 @@ class AuthService extends ChangeNotifier {
     return false;
   }
 
+  Future<User?> fetchCurrentUser() async {
+    try {
+      final info = await _client.getCurrentUser();
+      if (info is Map<String, dynamic>) {
+        _user = User.fromJson(info);
+        notifyListeners();
+        return _user;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  Future<bool> updateProfile(String name, String email) async {
+    try {
+      final data =
+          await _client.updateCurrentUser({'name': name, 'email': email});
+      if (data is Map<String, dynamic>) {
+        _user = User.fromJson(data);
+        notifyListeners();
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
   void logout() {
     _client.updateToken(null);
     _prefs?.remove('token');

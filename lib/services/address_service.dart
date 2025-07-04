@@ -18,4 +18,12 @@ class AddressService {
     }
     return null;
   }
+
+  Future<Address?> updateAddress(int id, String address) async {
+    final data = await _client.updateAddress(id, address);
+    if (data is Map<String, dynamic>) {
+      return Address.fromJson(data);
+    }
+    return null;
+  }
 }

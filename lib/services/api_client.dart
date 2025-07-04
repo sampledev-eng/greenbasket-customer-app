@@ -104,6 +104,20 @@ class ApiClient {
 
   Future<dynamic> getCurrentUser() async => await get('/users/me');
 
+  Future<dynamic> updateCurrentUser(Map<String, dynamic> data) async {
+    final res = await http.put(_uri('/users/me'),
+        headers: _headers(), body: json.encode(data));
+    _check(res);
+    return json.decode(res.body);
+  }
+
+  Future<dynamic> updateAddress(int id, String address) async {
+    final res = await http.put(_uri('/addresses/$id'),
+        headers: _headers(), body: json.encode({'address': address}));
+    _check(res);
+    return json.decode(res.body);
+  }
+
   Future<List<dynamic>> categories() async => await get('/categories');
 
   Future<dynamic> createCategory(String name) async =>

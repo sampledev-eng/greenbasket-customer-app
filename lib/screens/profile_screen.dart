@@ -12,30 +12,54 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  late AuthService _auth;
   final AddressService _addressService = AddressService();
+
+  final TextEditingController _name = TextEditingController();
+  final TextEditingController _email = TextEditingController();
   List<Address> _addresses = [];
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
+    _auth = context.read<AuthService>();
     _load();
   }
 
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    super.dispose();
+  }
+
   Future<void> _load() async {
+    await _auth.fetchCurrentUser();
+    _name.text = _auth.currentUser?.username ?? '';
+    _email.text = _auth.currentUser?.email ?? '';
     final addresses = await _addressService.fetchAddresses();
+    if (!mounted) return;
     setState(() {
       _addresses = addresses;
       _loading = false;
     });
   }
 
-  Future<void> _addAddress() async {
-    final controller = TextEditingController();
+  Future<void> _saveProfile() async {
+    final success = await _auth.updateProfile(_name.text, _email.text);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content:
+            Text(success ? 'Profile updated' : 'Failed to update profile')));
+  }
+
+  Future<void> _addOrEditAddress([Address? address]) async {
+    final controller = TextEditingController(text: address?.address);
     final text = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('New Address'),
+        title: Text(address == null ? 'New Address' : 'Edit Address'),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(hintText: 'Address'),
@@ -53,18 +77,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
     if (text == null || text.isEmpty) return;
-    final created = await _addressService.createAddress(text);
-    if (created != null) {
-      setState(() => _addresses.add(created));
+    Address? result;
+    if (address == null) {
+      result = await _addressService.createAddress(text);
+      if (result != null) {
+        setState(() => _addresses.add(result!));
+      }
     } else {
+      result = await _addressService.updateAddress(address.id, text);
+      if (result != null) {
+        setState(() {
+          final idx = _addresses.indexWhere((a) => a.id == address.id);
+          if (idx >= 0) _addresses[idx] = result!;
+        });
+      }
+    }
+    if (result == null && mounted) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Failed to add address')));
+          .showSnackBar(const SnackBar(content: Text('Failed to save address')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final auth = context.watch<AuthService>();
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: _loading
@@ -74,8 +109,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(auth.currentUser?.username ?? 'Guest',
-                      style: Theme.of(context).textTheme.headlineSmall),
+                  TextField(
+                    controller: _name,
+                    decoration: const InputDecoration(labelText: 'Name'),
+                  ),
+                  TextField(
+                    controller: _email,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                  ),
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -84,7 +125,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           style: TextStyle(fontWeight: FontWeight.bold)),
                       IconButton(
                         icon: const Icon(Icons.add),
-                        onPressed: _addAddress,
+                        onPressed: () => _addOrEditAddress(),
                       ),
                     ],
                   ),
@@ -97,19 +138,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               final addr = _addresses[index];
                               return ListTile(
                                 title: Text(addr.address),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () => _addOrEditAddress(addr),
+                                ),
                               );
                             },
                           ),
                   ),
                   const SizedBox(height: 20),
-                  Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        auth.logout();
-                        Navigator.pushReplacementNamed(context, '/login');
-                      },
-                      child: const Text('Logout'),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _saveProfile,
+                          child: const Text('Save Profile'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            _auth.logout();
+                            Navigator.pushReplacementNamed(context, '/login');
+                          },
+                          child: const Text('Logout'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
