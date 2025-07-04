@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import 'main_screen.dart';
@@ -14,6 +17,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _username = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _address = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   late AuthService _auth;
   bool _loading = false;
@@ -24,13 +28,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _auth = context.read<AuthService>();
   }
 
+  @override
+  void dispose() {
+    _username.dispose();
+    _email.dispose();
+    _password.dispose();
+    _address.dispose();
+    super.dispose();
+  }
+
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-    final success = await _auth.register(
-        _username.text, _email.text, _password.text);
+    final res = await http.post(
+      Uri.parse('https://greenbasket-backend.onrender.com/register'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({
+        'email': _email.text,
+        'password': _password.text,
+        'name': _username.text,
+        'address': _address.text,
+      }),
+    );
     setState(() => _loading = false);
-    if (success && mounted) {
+    if (res.statusCode >= 200 && res.statusCode < 300 && mounted) {
       final codeController = TextEditingController();
       final verified = await showDialog<bool>(
             context: context,
@@ -50,8 +71,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ) ??
           false;
       if (verified && mounted) {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (_) => const MainScreen()));
+        final result = await _auth.login(_email.text, _password.text);
+        if (result == AuthResult.success && mounted) {
+          Navigator.pushReplacement(
+              context, MaterialPageRoute(builder: (_) => const MainScreen()));
+        } else if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Login failed')), 
+          );
+        }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('OTP verification failed')),
@@ -91,6 +119,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 obscureText: true,
                 validator: (v) =>
                     v != null && v.length >= 6 ? null : 'Minimum 6 characters',
+              ),
+              TextFormField(
+                controller: _address,
+                decoration: const InputDecoration(labelText: 'Address'),
+                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
               ),
               const SizedBox(height: 20),
               ElevatedButton(
