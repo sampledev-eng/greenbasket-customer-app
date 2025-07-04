@@ -8,8 +8,12 @@ import 'screens/offline_screen.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'services/cart_service.dart';
 import 'services/auth_service.dart';
+import 'services/wishlist_service.dart';
+import 'services/notification_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.init();
   runApp(const MyApp());
 }
 
@@ -22,6 +26,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => CartService()),
         ChangeNotifierProvider(create: (_) => AuthService()),
+        ChangeNotifierProvider(create: (_) => WishlistService()),
       ],
       child: Consumer<AuthService>(
         builder: (context, auth, _) {

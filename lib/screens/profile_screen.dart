@@ -104,71 +104,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(title: const Text('Profile')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: _name,
-                    decoration: const InputDecoration(labelText: 'Name'),
-                  ),
-                  TextField(
-                    controller: _email,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final isWide = constraints.maxWidth > 600;
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Flex(
+                    direction: isWide ? Axis.horizontal : Axis.vertical,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Addresses',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      IconButton(
-                        icon: const Icon(Icons.add),
-                        onPressed: () => _addOrEditAddress(),
-                      ),
-                    ],
-                  ),
-                  Expanded(
-                    child: _addresses.isEmpty
-                        ? const Center(child: Text('No addresses'))
-                        : ListView.builder(
-                            itemCount: _addresses.length,
-                            itemBuilder: (context, index) {
-                              final addr = _addresses[index];
-                              return ListTile(
-                                title: Text(addr.address),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.edit),
-                                  onPressed: () => _addOrEditAddress(addr),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextField(
+                              controller: _name,
+                              decoration:
+                                  const InputDecoration(labelText: 'Name'),
+                            ),
+                            TextField(
+                              controller: _email,
+                              decoration:
+                                  const InputDecoration(labelText: 'Email'),
+                            ),
+                            const SizedBox(height: 20),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('Addresses',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold)),
+                                IconButton(
+                                  icon: const Icon(Icons.add),
+                                  onPressed: () => _addOrEditAddress(),
                                 ),
-                              );
-                            },
-                          ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _saveProfile,
-                          child: const Text('Save Profile'),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            _auth.logout();
-                            Navigator.pushReplacementNamed(context, '/login');
-                          },
-                          child: const Text('Logout'),
+                              ],
+                            ),
+                            Expanded(
+                              child: _addresses.isEmpty
+                                  ? const Center(child: Text('No addresses'))
+                                  : ListView.builder(
+                                      itemCount: _addresses.length,
+                                      itemBuilder: (context, index) {
+                                        final addr = _addresses[index];
+                                        return ListTile(
+                                          title: Text(addr.address),
+                                          trailing: IconButton(
+                                            icon: const Icon(Icons.edit),
+                                            onPressed: () =>
+                                                _addOrEditAddress(addr),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                            ),
+                            const SizedBox(height: 20),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: _saveProfile,
+                                    child: const Text('Save Profile'),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      _auth.logout();
+                                      Navigator.pushReplacementNamed(
+                                          context, '/login');
+                                    },
+                                    child: const Text('Logout'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
     );
   }

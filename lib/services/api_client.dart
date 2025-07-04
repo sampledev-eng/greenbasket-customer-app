@@ -54,12 +54,19 @@ class ApiClient {
   }
 
   Future<dynamic> requestOtp(String phone) async =>
-      await post('/request-otp', {'phone': phone});
+      await post('/auth/request-otp', {'phone': phone});
 
   Future<dynamic> verifyOtp(String phone, String code) async =>
-      await post('/verify-otp', {'phone': phone, 'code': code});
+      await post('/auth/verify-otp', {'phone': phone, 'code': code});
 
   Future<List<dynamic>> products() async => await get('/products');
+
+  Future<dynamic> productReviews(int id) async =>
+      await get('/products/$id/reviews');
+
+  Future<dynamic> addReview(int id, int rating, String comment) async =>
+      await post('/products/$id/reviews',
+          {'rating': rating, 'comment': comment});
 
   Future<dynamic> addProduct(String name, String description, double price,
       int stock, int categoryId, String imageUrl) async {

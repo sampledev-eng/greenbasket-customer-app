@@ -5,7 +5,11 @@ import '../models/product.dart';
 import '../services/cart_service.dart';
 import '../services/product_service.dart';
 import '../services/category_service.dart';
+import '../services/wishlist_service.dart';
+import 'package:shimmer/shimmer.dart';
 import '../models/category.dart';
+import '../widgets/empty_view.dart';
+import '../widgets/error_view.dart';
 import 'cart_screen.dart';
 import 'product_detail.dart';
 import 'order_screen.dart';
@@ -108,13 +112,33 @@ class _HomeScreenState extends State<HomeScreen> {
       body: FutureBuilder<List<Product>>(
         future: _productsFuture,
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return ErrorView(
+              message: 'Failed to load products',
+              onRetry: () => setState(() {
+                _productsFuture = _load();
+              }),
+            );
+          }
           if (snapshot.connectionState == ConnectionState.waiting &&
               _allProducts.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: GridView.builder(
+                itemCount: 6,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2, mainAxisSpacing: 8, crossAxisSpacing: 8),
+                itemBuilder: (_, __) => Shimmer.fromColors(
+                  baseColor: Colors.grey.shade300,
+                  highlightColor: Colors.grey.shade100,
+                  child: Container(color: Colors.white),
+                ),
+              ),
+            );
           }
           final products = _allProducts;
           if (products.isEmpty) {
-            return const Center(child: Text('No products'));
+            return const EmptyView(message: 'No products');
           }
           final filtered = products
               .where((p) => p.name
@@ -274,15 +298,32 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                             ),
-                            IconButton(
-                              icon: const Icon(Icons.add_shopping_cart),
-                              onPressed: () async {
-                                await cart.add(product);
-                                if (context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Added to cart')));
-                                }
-                              },
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Consumer<WishlistService>(
+                                  builder: (context, wish, _) {
+                                    final fav = wish.contains(product);
+                                    return IconButton(
+                                      icon: Icon(
+                                          fav ? Icons.favorite : Icons.favorite_border,
+                                          color: fav ? Colors.red : null),
+                                      onPressed: () => wish.toggle(product),
+                                    );
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.add_shopping_cart),
+                                  onPressed: () async {
+                                    await cart.add(product);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text('Added to cart')));
+                                    }
+                                  },
+                                ),
+                              ],
                             )
                           ],
                         ),

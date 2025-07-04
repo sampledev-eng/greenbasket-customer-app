@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
+import '../services/product_service.dart';
 
 class ProductDetail extends StatefulWidget {
   final Product product;
@@ -12,9 +13,23 @@ class ProductDetail extends StatefulWidget {
 }
 
 class _ProductDetailState extends State<ProductDetail> {
+  final ProductService _service = ProductService();
   int _rating = 0;
-  final List<Map<String, dynamic>> _comments = [];
   final TextEditingController _commentCtrl = TextEditingController();
+  Future<List<dynamic>>? _reviewsFuture;
+  List<dynamic> _reviews = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _reviewsFuture = _load();
+  }
+
+  Future<List<dynamic>> _load() async {
+    final data = await _service.fetchReviews(widget.product.id);
+    _reviews = data;
+    return _reviews;
+  }
 
   @override
   void dispose() {
@@ -57,34 +72,47 @@ class _ProductDetailState extends State<ProductDetail> {
               decoration: const InputDecoration(labelText: 'Comment'),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (_rating == 0 || _commentCtrl.text.isEmpty) return;
-                setState(() {
-                  _comments.add({
-                    'rating': _rating,
-                    'text': _commentCtrl.text,
-                  });
-                  _rating = 0;
+                final ok = await _service.submitReview(
+                    widget.product.id, _rating, _commentCtrl.text);
+                if (ok) {
                   _commentCtrl.clear();
-                });
-                ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Review added')));
+                  setState(() {
+                    _rating = 0;
+                    _reviewsFuture = _load();
+                  });
+                }
               },
               child: const Text('Submit Review'),
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: _comments.length,
-                itemBuilder: (context, index) {
-                  final c = _comments[index];
-                  return ListTile(
-                    title: Row(
-                      children: List.generate(
-                          5,
-                          (i) => Icon(i < c['rating'] ? Icons.star : Icons.star_border,
-                              color: Colors.orange, size: 16)),
-                    ),
-                    subtitle: Text(c['text']),
+              child: FutureBuilder<List<dynamic>>(
+                future: _reviewsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  final reviews = snapshot.data ?? [];
+                  if (reviews.isEmpty) {
+                    return const Center(child: Text('No reviews yet'));
+                  }
+                  return ListView.builder(
+                    itemCount: reviews.length,
+                    itemBuilder: (context, index) {
+                      final c = reviews[index] as Map<String, dynamic>;
+                      final rating = c['rating'] as int? ?? 0;
+                      final text = c['comment'] ?? c['text'] ?? '';
+                      return ListTile(
+                        title: Row(
+                          children: List.generate(
+                              5,
+                              (i) => Icon(i < rating ? Icons.star : Icons.star_border,
+                                  color: Colors.orange, size: 16)),
+                        ),
+                        subtitle: Text(text),
+                      );
+                    },
                   );
                 },
               ),

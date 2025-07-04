@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import '../services/order_service.dart';
 
 class OrderScreen extends StatefulWidget {
@@ -11,11 +12,22 @@ class OrderScreen extends StatefulWidget {
 class _OrderScreenState extends State<OrderScreen> {
   final OrderService _service = OrderService();
   late Future<void> _future;
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     _future = _service.fetchOrders();
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      _service.fetchOrders();
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override

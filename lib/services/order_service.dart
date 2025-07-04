@@ -1,10 +1,12 @@
 import '../models/order.dart';
 import '../models/backend_order.dart';
 import 'api_client.dart';
+import 'notification_service.dart';
 
 class OrderService {
   final ApiClient _client = ApiClient();
   final List<BackendOrder> _orders = [];
+  final Map<int, String> _statuses = {};
 
   List<BackendOrder> get orders => List.unmodifiable(_orders);
 
@@ -21,10 +23,20 @@ class OrderService {
   Future<void> fetchOrders() async {
     final data = await _client.orders();
     if (data is List) {
+      final newOrders = data
+          .map((e) => BackendOrder.fromJson(e as Map<String, dynamic>))
+          .toList();
+      for (var order in newOrders) {
+        final prev = _statuses[order.orderId];
+        if (prev != null && prev != order.status) {
+          NotificationService.show(order.orderId, 'Order Update',
+              'Order #${order.orderId} is now ${order.status}');
+        }
+        _statuses[order.orderId] = order.status;
+      }
       _orders
         ..clear()
-        ..addAll(data
-            .map((e) => BackendOrder.fromJson(e as Map<String, dynamic>)));
+        ..addAll(newOrders);
     }
   }
 

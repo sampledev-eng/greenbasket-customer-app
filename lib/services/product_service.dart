@@ -32,5 +32,19 @@ class ProductService {
         .toList();
   }
 
+  Future<List<dynamic>> fetchReviews(int productId) async {
+    final data = await _client.productReviews(productId);
+    return data is List ? data : [];
+  }
+
+  Future<bool> submitReview(int productId, int rating, String comment) async {
+    try {
+      await _client.addReview(productId, rating, comment);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   // Removed local product loading now that backend API is available
 }
