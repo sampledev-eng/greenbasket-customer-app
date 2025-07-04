@@ -270,75 +270,87 @@ class _HomeScreenState extends State<HomeScreen> {
                           crossAxisSpacing: 8,
                           childAspectRatio: 0.7),
                       itemBuilder: (context, index) {
-                    final product = filtered[index];
-                    return GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (_) => ProductDetail(product: product)),
-                      ),
-                      child: Card(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Image.network(
-                                product.imageUrl,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
-                                semanticLabel: product.name,
-                                errorBuilder: (_, __, ___) => const Icon(
-                                    Icons.broken_image,
-                                    size: 48,
-                                    color: Colors.grey),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(4.0),
-                              child: Text(product.name,
-                                  style: Theme.of(context).textTheme.bodyLarge),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: Text(
-                                '\$${product.price.toStringAsFixed(2)}',
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        final product = filtered[index];
+                        return GestureDetector(
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) =>
+                                    ProductDetail(product: product)),
+                          ),
+                          child: Card(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Consumer<WishlistService>(
-                                  builder: (context, wish, _) {
-                                    final fav = wish.contains(product);
-                                    return IconButton(
-                                      icon: Icon(
-                                          fav ? Icons.favorite : Icons.favorite_border,
-                                          color: fav ? Colors.red : null),
-                                      onPressed: () => wish.toggle(product),
-                                    );
-                                  },
+                                Expanded(
+                                  child: Image.network(
+                                    product.imageUrl,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                    semanticLabel: product.name,
+                                    errorBuilder: (_, __, ___) => const Icon(
+                                        Icons.broken_image,
+                                        size: 48,
+                                        color: Colors.grey),
+                                  ),
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.add_shopping_cart),
-                                  onPressed: () async {
-                                    await cart.add(product);
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(const SnackBar(
-                                              content: Text('Added to cart')));
-                                    }
-                                  },
+                                Padding(
+                                  padding: const EdgeInsets.all(4.0),
+                                  child: Text(product.name,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyLarge),
                                 ),
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 4),
+                                  child: Text(
+                                    '\$${product.price.toStringAsFixed(2)}',
+                                    style:
+                                        Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Consumer<WishlistService>(
+                                      builder: (context, wish, _) {
+                                        final fav = wish.contains(product);
+                                        return IconButton(
+                                          icon: Icon(
+                                              fav
+                                                  ? Icons.favorite
+                                                  : Icons.favorite_border,
+                                              color: fav ? Colors.red : null),
+                                          onPressed: () => wish.toggle(product),
+                                        );
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon:
+                                          const Icon(Icons.add_shopping_cart),
+                                      onPressed: () async {
+                                        await cart.add(product);
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(const SnackBar(
+                                                  content:
+                                                      Text('Added to cart')));
+                                        }
+                                      },
+                                    ),
+                                  ],
+                                )
                               ],
-                            )
-                          ],
-                        ),
-                      ),
+                            ),
+                          ),
+                        );
+                      },
                     );
                   },
                 ),
-              )
+              ),
             ],
           );
         },
