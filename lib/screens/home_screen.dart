@@ -87,7 +87,6 @@ class _HomeScreenState extends State<HomeScreen> {
       imageUrl:
           'https://picsum.photos/seed/fruit_${i + 1}/400/400', // free random pics
       price: 2.5 + i,
-      stock: 100,
       categoryId: 1,
     ),
   );
