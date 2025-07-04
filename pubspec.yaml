@@ -12,6 +12,10 @@ dependencies:
   provider: ^6.0.0
   http: ^0.13.6
   google_fonts: ^4.0.3
+  shared_preferences: ^2.2.2
+  connectivity_plus: ^5.0.2
+  shimmer: ^3.0.0
+  flutter_local_notifications: ^16.3.0
 
 
 dev_dependencies:
@@ -20,5 +24,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  assets:
-    - assets/products.json

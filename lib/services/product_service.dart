@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
-
 import '../models/product.dart';
 import 'api_client.dart';
 
@@ -8,24 +5,13 @@ class ProductService {
   final ApiClient _client = ApiClient();
 
   Future<List<Product>> fetchProducts() async {
-    try {
-      final data = await _client.get('/products/');
-      return _parseList(data);
-    } catch (_) {
-      return _loadLocalProducts();
-    }
+    final data = await _client.products();
+    return _parseList(data);
   }
 
   Future<List<Product>> searchProducts(String query) async {
-    try {
-      final data = await _client.get('/products?search=$query');
-      return _parseList(data);
-    } catch (_) {
-      final all = await _loadLocalProducts();
-      return all
-          .where((p) => p.name.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    }
+    final data = await _client.get('/products/search?q=$query');
+    return _parseList(data);
   }
 
   Future<Product> createProduct(
@@ -46,11 +32,19 @@ class ProductService {
         .toList();
   }
 
-  Future<List<Product>> _loadLocalProducts() async {
-    final jsonStr = await rootBundle.loadString('assets/products.json');
-    final data = json.decode(jsonStr) as List;
-    return data
-        .map((e) => Product.fromJson(e as Map<String, dynamic>))
-        .toList();
+  Future<List<dynamic>> fetchReviews(int productId) async {
+    final data = await _client.productReviews(productId);
+    return data is List ? data : [];
   }
+
+  Future<bool> submitReview(int productId, int rating, String comment) async {
+    try {
+      await _client.addReview(productId, rating, comment);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Removed local product loading now that backend API is available
 }

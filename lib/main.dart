@@ -3,10 +3,17 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
+import 'screens/main_screen.dart';
+import 'screens/offline_screen.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'services/cart_service.dart';
 import 'services/auth_service.dart';
+import 'services/wishlist_service.dart';
+import 'services/notification_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService.init();
   runApp(const MyApp());
 }
 
@@ -19,18 +26,37 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => CartService()),
         ChangeNotifierProvider(create: (_) => AuthService()),
+        ChangeNotifierProvider(create: (_) => WishlistService()),
       ],
-      child: MaterialApp(
-        title: 'GreenBasket',
-        theme: ThemeData(
-          colorScheme:
-              ColorScheme.fromSeed(seedColor: const Color(0xFF6AA84F)),
-          textTheme: GoogleFonts.poppinsTextTheme(),
-        ),
-        home: const LoginScreen(),
-        routes: {
-          '/login': (_) => const LoginScreen(),
-          '/register': (_) => const RegisterScreen(),
+      child: Consumer<AuthService>(
+        builder: (context, auth, _) {
+          if (!auth.initialized) {
+            return const MaterialApp(
+                home: Scaffold(body: Center(child: CircularProgressIndicator())));
+          }
+          return StreamBuilder<ConnectivityResult>(
+            stream: Connectivity().onConnectivityChanged,
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data == ConnectivityResult.none) {
+                return const MaterialApp(home: OfflineScreen());
+              }
+              return MaterialApp(
+                title: 'GreenBasket',
+                theme: ThemeData(
+                  colorScheme:
+                      ColorScheme.fromSeed(seedColor: const Color(0xFF6AA84F)),
+                  textTheme: GoogleFonts.poppinsTextTheme(),
+                ),
+                home: auth.currentUser != null
+                    ? const MainScreen()
+                    : const LoginScreen(),
+                routes: {
+                  '/login': (_) => const LoginScreen(),
+                  '/register': (_) => const RegisterScreen(),
+                },
+              );
+            },
+          );
         },
       ),
     );
