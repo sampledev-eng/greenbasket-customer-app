@@ -22,6 +22,7 @@ class CartService extends ChangeNotifier {
           description: '',
           imageUrl: '',
           categoryId: (map['category_id'] ?? 0) as int,
+          brand: (map['brand'] ?? '') as String,
         );
         final qty = map['quantity'] as int? ?? 1;
         _items.add(CartItem(product: product, quantity: qty));
@@ -32,7 +33,9 @@ class CartService extends ChangeNotifier {
   }
 
   Future<void> add(Product product) async {
-    await _client.addCart(product.id, 1);
+    try {
+      await _client.addCart(product.id, 1);
+    } catch (_) {}
     final index = _items.indexWhere((i) => i.product.id == product.id);
     if (index >= 0) {
       _items[index].quantity++;
@@ -43,7 +46,9 @@ class CartService extends ChangeNotifier {
   }
 
   Future<void> updateQuantity(CartItem item, int qty) async {
-    await _client.updateCart(item.product.id, qty);
+    try {
+      await _client.updateCart(item.product.id, qty);
+    } catch (_) {}
     if (qty <= 0) {
       _items.remove(item);
     } else {
@@ -56,7 +61,9 @@ class CartService extends ChangeNotifier {
   }
 
   Future<void> remove(CartItem item) async {
-    await _client.removeCart(item.product.id);
+    try {
+      await _client.removeCart(item.product.id);
+    } catch (_) {}
     _items.remove(item);
     notifyListeners();
   }

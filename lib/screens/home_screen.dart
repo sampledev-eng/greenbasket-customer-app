@@ -26,6 +26,9 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Category> _categories = [];
   List<Product> _allProducts = [];
   int? _selectedCategory;
+  String? _selectedBrand;
+  String _priceFilter = 'All';
+  List<String> _brands = [];
 
   @override
   void initState() {
@@ -41,6 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final products = await _productService.fetchProducts();
     _allProducts = products;
     _categories = await _categoryService.fetchCategories();
+    _brands = products.map((p) => p.brand).toSet().toList();
     return products;
   }
 
@@ -61,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       setState(() {
         _allProducts = results;
+        _brands = results.map((p) => p.brand).toSet().toList();
       });
     });
   }
@@ -117,6 +122,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   .contains(_search.text.toLowerCase()))
               .where((p) => _selectedCategory == null ||
                   p.categoryId == _selectedCategory)
+              .where((p) => _selectedBrand == null || p.brand == _selectedBrand)
+              .where((p) {
+                switch (_priceFilter) {
+                  case 'Below 50':
+                    return p.price < 50;
+                  case '50-100':
+                    return p.price >= 50 && p.price <= 100;
+                  case 'Above 100':
+                    return p.price > 100;
+                  default:
+                    return true;
+                }
+              })
               .toList();
           return ListView(
             children: [
@@ -127,6 +145,47 @@ class _HomeScreenState extends State<HomeScreen> {
                   decoration: const InputDecoration(
                       hintText: 'Search products', prefixIcon: Icon(Icons.search)),
                   onChanged: _onSearchChanged,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: _selectedBrand,
+                        hint: const Text('Brand'),
+                        items: _brands
+                            .map((b) => DropdownMenuItem(
+                                  value: b,
+                                  child: Text(b),
+                                ))
+                            .toList(),
+                        onChanged: (val) => setState(() => _selectedBrand = val),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: _priceFilter,
+                        items: const [
+                          'All',
+                          'Below 50',
+                          '50-100',
+                          'Above 100'
+                        ]
+                            .map((p) => DropdownMenuItem(
+                                  value: p,
+                                  child: Text(p),
+                                ))
+                            .toList(),
+                        onChanged: (val) =>
+                            setState(() => _priceFilter = val ?? 'All'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Padding(
@@ -167,16 +226,19 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
-                child: GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: filtered.length,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 8,
-                      crossAxisSpacing: 8,
-                      childAspectRatio: 0.7),
-                  itemBuilder: (context, index) {
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final crossAxis = constraints.maxWidth > 600 ? 4 : 2;
+                    return GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: filtered.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossAxis,
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                          childAspectRatio: 0.7),
+                      itemBuilder: (context, index) {
                     final product = filtered[index];
                     return GestureDetector(
                       onTap: () => Navigator.push(
@@ -214,7 +276,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             IconButton(
                               icon: const Icon(Icons.add_shopping_cart),
-                              onPressed: () async => cart.add(product),
+                              onPressed: () async {
+                                await cart.add(product);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Added to cart')));
+                                }
+                              },
                             )
                           ],
                         ),

@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/main_screen.dart';
+import 'screens/offline_screen.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'services/cart_service.dart';
 import 'services/auth_service.dart';
 
@@ -27,19 +29,27 @@ class MyApp extends StatelessWidget {
             return const MaterialApp(
                 home: Scaffold(body: Center(child: CircularProgressIndicator())));
           }
-          return MaterialApp(
-            title: 'GreenBasket',
-            theme: ThemeData(
-              colorScheme:
-                  ColorScheme.fromSeed(seedColor: const Color(0xFF6AA84F)),
-              textTheme: GoogleFonts.poppinsTextTheme(),
-            ),
-            home: auth.currentUser != null
-                ? const MainScreen()
-                : const LoginScreen(),
-            routes: {
-              '/login': (_) => const LoginScreen(),
-              '/register': (_) => const RegisterScreen(),
+          return StreamBuilder<ConnectivityResult>(
+            stream: Connectivity().onConnectivityChanged,
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data == ConnectivityResult.none) {
+                return const MaterialApp(home: OfflineScreen());
+              }
+              return MaterialApp(
+                title: 'GreenBasket',
+                theme: ThemeData(
+                  colorScheme:
+                      ColorScheme.fromSeed(seedColor: const Color(0xFF6AA84F)),
+                  textTheme: GoogleFonts.poppinsTextTheme(),
+                ),
+                home: auth.currentUser != null
+                    ? const MainScreen()
+                    : const LoginScreen(),
+                routes: {
+                  '/login': (_) => const LoginScreen(),
+                  '/register': (_) => const RegisterScreen(),
+                },
+              );
             },
           );
         },

@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/cart_item.dart';
 import '../services/cart_service.dart';
-import '../services/order_service.dart';
 import '../services/address_service.dart';
-import 'thank_you_screen.dart';
+import 'payment_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({Key? key}) : super(key: key);
@@ -84,20 +83,15 @@ class _CartScreenState extends State<CartScreen> {
                             setState(() => _loading = false);
                             return;
                           }
-                          final service = OrderService();
-                          final order = await service.createOrder(created.id, 'cod');
                           setState(() => _loading = false);
-                          if (order != null && mounted) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (_) => ThankYouScreen(orderId: order.orderId, eta: '30 mins')),
-                            );
-                          } else if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Order failed')),
-                            );
-                          }
+                          if (!mounted) return;
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => PaymentScreen(
+                                  addressId: created.id, total: cart.total),
+                            ),
+                          );
                         },
                   child: _loading
                       ? const CircularProgressIndicator()
