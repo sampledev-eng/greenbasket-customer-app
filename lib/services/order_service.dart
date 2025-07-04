@@ -8,9 +8,8 @@ class OrderService {
 
   List<BackendOrder> get orders => List.unmodifiable(_orders);
 
-  Future<BackendOrder?> createOrder(String address, String paymentMode) async {
-    final data =
-        await _client.createOrder(address, paymentMode);
+  Future<BackendOrder?> createOrder(int addressId, String paymentMode) async {
+    final data = await _client.createOrder(addressId, paymentMode);
     if (data is Map<String, dynamic>) {
       final order = BackendOrder.fromJson(data);
       _orders.add(order);

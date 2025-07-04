@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../services/cart_service.dart';
 import 'main_screen.dart';
 import 'forgot_password_screen.dart';
 import 'otp_screen.dart';
@@ -13,7 +14,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _username = TextEditingController();
+  final _email = TextEditingController();
   final _password = TextEditingController();
   late AuthService _auth;
   bool _loading = false;
@@ -25,10 +26,22 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _login() async {
+    if (_email.text.isEmpty || !_email.text.contains('@')) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Enter a valid email')));
+      return;
+    }
+    if (_password.text.length < 6) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Password too short')));
+      return;
+    }
     setState(() => _loading = true);
-    final result = await _auth.login(_username.text, _password.text);
+    final result = await _auth.login(_email.text, _password.text);
     setState(() => _loading = false);
     if (result == AuthResult.success) {
+      final cart = context.read<CartService>();
+      await cart.load();
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (_) => const MainScreen()));
     } else if (result == AuthResult.unauthorized) {
@@ -74,8 +87,8 @@ class _LoginScreenState extends State<LoginScreen> {
                             ?.copyWith(color: Theme.of(context).colorScheme.primary)),
                     const SizedBox(height: 16),
                     TextField(
-                      controller: _username,
-                      decoration: const InputDecoration(labelText: 'Username'),
+                      controller: _email,
+                      decoration: const InputDecoration(labelText: 'Email'),
                     ),
                     TextField(
                       controller: _password,
@@ -110,11 +123,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       child: const Text('Login with OTP'),
                     ),
-                    TextButton(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, '/register'),
-                      child: const Text('New user? Sign up',
-                          style: TextStyle(color: Colors.green)),
+                    ElevatedButton(
+                      onPressed: () => Navigator.pushNamed(context, '/register'),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              Theme.of(context).colorScheme.secondary),
+                      child: const Text('Register'),
                     ),
                     TextButton(
                       onPressed: () {

@@ -3,10 +3,18 @@ import 'package:provider/provider.dart';
 import '../models/cart_item.dart';
 import '../services/cart_service.dart';
 import '../services/order_service.dart';
+import '../services/address_service.dart';
 import 'thank_you_screen.dart';
 
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
   const CartScreen({Key? key}) : super(key: key);
+
+  @override
+  State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  bool _loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -31,29 +39,73 @@ class CartScreen extends StatelessWidget {
               },
             ),
           ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Text('Total: \$${cart.total.toStringAsFixed(2)}'),
-                  const SizedBox(height: 8),
-                  ElevatedButton(
-                    onPressed: cart.items.isEmpty
-                        ? null
-                        : () async {
-                            final service = OrderService();
-                            final order = await service.createOrder('123 Street', 'COD');
-                            if (order != null && context.mounted) {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (_) => ThankYouScreen(orderId: order.orderId, eta: '30 mins')));
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                Text('Items: ${cart.totalItems}'),
+                Text('Total: \$${cart.total.toStringAsFixed(2)}'),
+                const SizedBox(height: 8),
+                ElevatedButton(
+                  onPressed: cart.items.isEmpty || _loading
+                      ? null
+                      : () async {
+                          final controller = TextEditingController();
+                          final address = await showDialog<String>(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                              title: const Text('Delivery Address'),
+                              content: TextField(
+                                controller: controller,
+                                decoration: const InputDecoration(hintText: 'Address'),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, controller.text),
+                                  child: const Text('OK'),
+                                )
+                              ],
+                            ),
+                          );
+                          if (address == null || address.isEmpty) return;
+                          setState(() => _loading = true);
+                          final addressService = AddressService();
+                          final created = await addressService.createAddress(address);
+                          if (created == null) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Failed to save address')),
+                              );
                             }
-                          },
-                    child: const Text('Checkout'),
-                  ),
-                ],
-              ),
-            )
+                            setState(() => _loading = false);
+                            return;
+                          }
+                          final service = OrderService();
+                          final order = await service.createOrder(created.id, 'cod');
+                          setState(() => _loading = false);
+                          if (order != null && mounted) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => ThankYouScreen(orderId: order.orderId, eta: '30 mins')),
+                            );
+                          } else if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Order failed')),
+                            );
+                          }
+                        },
+                  child: _loading
+                      ? const CircularProgressIndicator()
+                      : const Text('Checkout'),
+                ),
+              ],
+            ),
+          )
         ],
       ),
     );

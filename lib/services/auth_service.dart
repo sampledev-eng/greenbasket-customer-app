@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user.dart';
 import 'api_client.dart';
 
@@ -7,18 +8,44 @@ enum AuthResult { success, unauthorized, failure }
 class AuthService extends ChangeNotifier {
   final ApiClient _client = ApiClient();
   User? _user;
+  SharedPreferences? _prefs;
+  bool _initialized = false;
+
+  bool get initialized => _initialized;
+
+  AuthService() {
+    _load();
+  }
 
   User? get currentUser => _user;
 
-  Future<AuthResult> login(String username, String password) async {
+  Future<void> _load() async {
+    _prefs = await SharedPreferences.getInstance();
+    final token = _prefs!.getString('token');
+    if (token != null) {
+      _client.updateToken(token);
+      try {
+        final info = await _client.getCurrentUser();
+        if (info is Map<String, dynamic>) {
+          _user = User.fromJson(info);
+        }
+      } catch (_) {}
+    }
+    _initialized = true;
+    notifyListeners();
+  }
+
+  Future<AuthResult> login(String email, String password) async {
     try {
-      final data = await _client.login(username, password);
+      final data = await _client.login(email, password);
       if (data is Map && data.containsKey('access_token')) {
+        _prefs ??= await SharedPreferences.getInstance();
+        await _prefs!.setString('token', data['access_token'] as String);
         final info = await _client.getCurrentUser();
         if (info is Map<String, dynamic>) {
           _user = User.fromJson(info);
         } else {
-          _user = User(id: 0, username: username, email: '');
+          _user = User(id: 0, username: email, email: email);
         }
         notifyListeners();
         return AuthResult.success;
@@ -41,6 +68,8 @@ class AuthService extends ChangeNotifier {
     try {
       final data = await _client.verifyOtp(phone, code);
       if (data is Map && data.containsKey('access_token')) {
+        _prefs ??= await SharedPreferences.getInstance();
+        await _prefs!.setString('token', data['access_token'] as String);
         final info = await _client.getCurrentUser();
         if (info is Map<String, dynamic>) {
           _user = User.fromJson(info);
@@ -58,7 +87,18 @@ class AuthService extends ChangeNotifier {
       String username, String email, String password) async {
     final data = await _client.register(username, email, password);
     if (data is Map<String, dynamic>) {
-      _user = User.fromJson(data);
+      if (data.containsKey('access_token')) {
+        _prefs ??= await SharedPreferences.getInstance();
+        final token = data['access_token'] as String;
+        await _prefs!.setString('token', token);
+        _client.updateToken(token);
+        final info = await _client.getCurrentUser();
+        if (info is Map<String, dynamic>) {
+          _user = User.fromJson(info);
+        }
+      } else {
+        _user = User.fromJson(data);
+      }
       notifyListeners();
       return true;
     }
@@ -67,6 +107,7 @@ class AuthService extends ChangeNotifier {
 
   void logout() {
     _client.updateToken(null);
+    _prefs?.remove('token');
     _user = null;
     notifyListeners();
   }

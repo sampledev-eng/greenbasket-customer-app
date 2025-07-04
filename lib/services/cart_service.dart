@@ -21,6 +21,7 @@ class CartService extends ChangeNotifier {
           price: (map['price'] as num).toDouble(),
           description: '',
           imageUrl: '',
+          categoryId: (map['category_id'] ?? 0) as int,
         );
         final qty = map['quantity'] as int? ?? 1;
         _items.add(CartItem(product: product, quantity: qty));
@@ -31,8 +32,7 @@ class CartService extends ChangeNotifier {
   }
 
   Future<void> add(Product product) async {
-    await _client.post('/cart/add',
-        {'product_id': product.id, 'quantity': 1});
+    await _client.addCart(product.id, 1);
     final index = _items.indexWhere((i) => i.product.id == product.id);
     if (index >= 0) {
       _items[index].quantity++;
@@ -63,4 +63,7 @@ class CartService extends ChangeNotifier {
 
   double get total =>
       _items.fold(0, (sum, item) => sum + item.totalPrice);
+
+  int get totalItems =>
+      _items.fold(0, (sum, item) => sum + item.quantity);
 }

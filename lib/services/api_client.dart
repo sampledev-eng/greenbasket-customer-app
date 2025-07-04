@@ -40,13 +40,13 @@ class ApiClient {
 
   // High level helpers for backend endpoints
   Future<dynamic> register(String username, String email, String password) async {
-    return post('/auth/register',
-        {'username': username, 'email': email, 'password': password});
+    return post('/register',
+        {'name': username, 'email': email, 'password': password});
   }
 
-  Future<dynamic> login(String username, String password) async {
+  Future<dynamic> login(String email, String password) async {
     final data =
-        await post('/auth/login', {'username': username, 'password': password});
+        await post('/login', {'email': email, 'password': password});
     if (data is Map && data.containsKey('access_token')) {
       updateToken(data['access_token']);
     }
@@ -54,16 +54,16 @@ class ApiClient {
   }
 
   Future<dynamic> requestOtp(String phone) async =>
-      await post('/auth/request-otp', {'phone': phone});
+      await post('/request-otp', {'phone': phone});
 
   Future<dynamic> verifyOtp(String phone, String code) async =>
-      await post('/auth/verify-otp', {'phone': phone, 'code': code});
+      await post('/verify-otp', {'phone': phone, 'code': code});
 
-  Future<List<dynamic>> products() async => await get('/products/');
+  Future<List<dynamic>> products() async => await get('/products');
 
   Future<dynamic> addProduct(String name, String description, double price,
       int stock, int categoryId, String imageUrl) async {
-    return post('/products/', {
+    return post('/products', {
       'name': name,
       'description': description,
       'price': price,
@@ -74,22 +74,26 @@ class ApiClient {
   }
 
   Future<dynamic> addCart(int productId, int quantity) async =>
-      await post('/cart/add', {'product_id': productId, 'quantity': quantity});
+      await post('/cart', {'product_id': productId, 'quantity': quantity});
 
   Future<dynamic> updateCart(int productId, int quantity) async =>
-      await post('/cart/update',
-          {'product_id': productId, 'quantity': quantity});
+      await post('/cart', {'product_id': productId, 'quantity': quantity});
 
   Future<dynamic> removeCart(int productId) async =>
-      await post('/cart/remove', {'product_id': productId});
+      await http.delete(_uri('/cart/$productId'), headers: _headers());
 
-  Future<List<dynamic>> fetchCart() async => await get('/cart/');
+  Future<List<dynamic>> fetchCart() async => await get('/cart');
 
-  Future<dynamic> createOrder(String address, String paymentMode) async =>
-      await post('/orders/create',
-          {'address': address, 'payment_mode': paymentMode});
+  Future<dynamic> createOrder(int addressId, String paymentMode) async =>
+      await post('/orders',
+          {'address_id': addressId, 'payment_method': paymentMode});
 
-  Future<List<dynamic>> orders() async => await get('/orders/');
+  Future<List<dynamic>> addresses() async => await get('/addresses');
+
+  Future<dynamic> addAddress(String address) async =>
+      await post('/addresses', {'address': address});
+
+  Future<List<dynamic>> orders() async => await get('/orders');
 
   Future<dynamic> trackDelivery(int orderId) async =>
       await get('/delivery/track/$orderId');
@@ -100,10 +104,10 @@ class ApiClient {
 
   Future<dynamic> getCurrentUser() async => await get('/users/me');
 
-  Future<List<dynamic>> categories() async => await get('/categories/');
+  Future<List<dynamic>> categories() async => await get('/categories');
 
   Future<dynamic> createCategory(String name) async =>
-      await post('/categories/', {'name': name});
+      await post('/categories', {'name': name});
 
   Future<dynamic> seed() async => await post('/seed', {});
 }

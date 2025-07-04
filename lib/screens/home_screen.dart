@@ -25,6 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Product>> _productsFuture;
   List<Category> _categories = [];
   List<Product> _allProducts = [];
+  int? _selectedCategory;
 
   @override
   void initState() {
@@ -82,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       radius: 8,
                       backgroundColor: Colors.red,
                       child: Text(
-                        cart.items.length.toString(),
+                        cart.totalItems.toString(),
                         style: const TextStyle(fontSize: 12, color: Colors.white),
                       ),
                     ),
@@ -114,6 +115,8 @@ class _HomeScreenState extends State<HomeScreen> {
               .where((p) => p.name
                   .toLowerCase()
                   .contains(_search.text.toLowerCase()))
+              .where((p) => _selectedCategory == null ||
+                  p.categoryId == _selectedCategory)
               .toList();
           return ListView(
             children: [
@@ -150,7 +153,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: _categories
                       .map((c) => Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: Chip(label: Text(c.name)),
+                            child: ChoiceChip(
+                              label: Text(c.name),
+                              selected: _selectedCategory == c.id,
+                              onSelected: (_) {
+                                setState(() => _selectedCategory =
+                                    _selectedCategory == c.id ? null : c.id);
+                              },
+                            ),
                           ))
                       .toList(),
                 ),
