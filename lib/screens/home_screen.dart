@@ -213,22 +213,29 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               Padding(
-  padding: const EdgeInsets.symmetric(vertical: 8),
-  child: SizedBox(
-    height: 150,
-    child: PageView(
-      children: [
-        'https://via.placeholder.com/400x150.png?text=Offer+1',
-        'https://via.placeholder.com/400x150.png?text=Offer+2',
-        'https://via.placeholder.com/400x150.png?text=Offer+3',
-      ].map((url) => ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.network(url, fit: BoxFit.cover),
-          ))
-        .toList(),
-    ),
-  ),
-),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: SizedBox(
+                  height: 150,
+                  child: PageView(
+                    children: [
+                      'https://via.placeholder.com/400x150.png?text=Offer+1',
+                      'https://via.placeholder.com/400x150.png?text=Offer+2',
+                      'https://via.placeholder.com/400x150.png?text=Offer+3',
+                    ]
+                        .map(
+                          (url) => ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.network(
+                              url,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              ),
               SizedBox(
                 height: 100,
                 child: ListView(
