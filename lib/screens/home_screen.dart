@@ -14,6 +14,7 @@ import '../services/wishlist_service.dart';
 import '../widgets/empty_view.dart';
 import '../widgets/error_view.dart';
 import 'product_detail.dart';
+import 'package:go_router/go_router.dart';
 import 'cart_screen.dart';
 import 'order_screen.dart';
 
@@ -332,8 +333,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Expanded(
               child: GestureDetector(
-                onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => ProductDetail(product: p))),
+                onTap: () => context.push('/product/${p.id}'),
                 child: Image.network(
                   p.imageUrl,
                   fit: BoxFit.cover,

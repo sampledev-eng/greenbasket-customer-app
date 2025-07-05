@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../services/address_service.dart';
 import '../models/address.dart';
@@ -191,11 +192,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: ElevatedButton(
-                                    onPressed: () {
-                                      _auth.logout();
-                                      Navigator.pushReplacementNamed(
-                                          context, '/login');
-                                    },
+                                  onPressed: () {
+                                    _auth.logout();
+                                    context.go('/');
+                                  },
                                     child: const Text('Logout'),
                                   ),
                                 ),

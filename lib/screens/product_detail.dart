@@ -7,8 +7,8 @@ import '../services/auth_service.dart';
 import '../models/review.dart';
 
 class ProductDetail extends StatefulWidget {
-  final Product product;
-  const ProductDetail({super.key, required this.product});
+  final int id;
+  const ProductDetail({super.key, required this.id});
 
   @override
   State<ProductDetail> createState() => _ProductDetailState();
@@ -20,6 +20,7 @@ class _ProductDetailState extends State<ProductDetail> {
   final TextEditingController _commentCtrl = TextEditingController();
   Future<List<Review>>? _reviewsFuture;
   List<Review> _reviews = [];
+  Product? _product;
 
   @override
   void initState() {
@@ -30,7 +31,8 @@ class _ProductDetailState extends State<ProductDetail> {
   }
 
   Future<List<Review>> _load() async {
-    final data = await _service.fetchReviews(widget.product.id);
+    _product = await _service.fetchProduct(widget.id);
+    final data = await _service.fetchReviews(widget.id);
     _reviews = data;
     return _reviews;
   }
@@ -45,25 +47,30 @@ class _ProductDetailState extends State<ProductDetail> {
   Widget build(BuildContext context) {
     final cart = Provider.of<CartService>(context, listen: false);
     return Scaffold(
-      appBar: AppBar(title: Text(widget.product.name)),
+      appBar: AppBar(title: Text(_product?.name ?? 'Loading')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.network(widget.product.imageUrl, height: 200),
+            if (_product != null)
+              Image.network(_product!.imageUrl, height: 200)
+            else
+              const SizedBox(height: 200),
             const SizedBox(height: 16),
-            Text(widget.product.name,
-                style: Theme.of(context).textTheme.titleLarge),
-            if (widget.product.mrp > widget.product.price)
-              Text('MRP: \$${widget.product.mrp.toStringAsFixed(2)}',
+            if (_product != null)
+              Text(_product!.name,
+                  style: Theme.of(context).textTheme.titleLarge),
+            if (_product != null && _product!.mrp > _product!.price)
+              Text('MRP: \$${_product!.mrp.toStringAsFixed(2)}',
                   style: const TextStyle(
                       decoration: TextDecoration.lineThrough,
                       color: Colors.grey)),
-            Text('\$${widget.product.price.toStringAsFixed(2)}'),
-            Text('Stock: ${widget.product.stock}'),
+            if (_product != null)
+              Text('\$${_product!.price.toStringAsFixed(2)}'),
+            if (_product != null) Text('Stock: ${_product!.stock}'),
             const SizedBox(height: 16),
-            Text(widget.product.description),
+            if (_product != null) Text(_product!.description),
             const SizedBox(height: 16),
             Row(
               children: List.generate(5, (i) {
@@ -84,8 +91,9 @@ class _ProductDetailState extends State<ProductDetail> {
             ElevatedButton(
               onPressed: () async {
                 if (_rating == 0 || _commentCtrl.text.isEmpty) return;
+                if (_product == null) return;
                 final ok = await _service.submitReview(
-                    widget.product.id, _rating, _commentCtrl.text);
+                    _product!.id, _rating, _commentCtrl.text);
                 if (ok) {
                   _commentCtrl.clear();
                   setState(() {
@@ -130,7 +138,8 @@ class _ProductDetailState extends State<ProductDetail> {
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () async {
-                await cart.add(widget.product);
+                if (_product == null) return;
+                await cart.add(_product!);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Added to cart')));
