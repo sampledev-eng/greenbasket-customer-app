@@ -21,7 +21,7 @@ class AuthService extends ChangeNotifier {
 
   Future<void> _load() async {
     _prefs = await SharedPreferences.getInstance();
-    final token = _prefs!.getString('token');
+    final token = _prefs?.getString('token');
     if (token != null) {
       _client.updateToken(token);
       try {
@@ -40,7 +40,10 @@ class AuthService extends ChangeNotifier {
       final data = await _client.login(email, password);
       if (data is Map && data.containsKey('access_token')) {
         _prefs ??= await SharedPreferences.getInstance();
-        await _prefs!.setString('token', data['access_token'] as String);
+        final prefs = _prefs;
+        if (prefs != null) {
+          await prefs.setString('token', data['access_token'] as String);
+        }
         final info = await _client.getCurrentUser();
         if (info is Map<String, dynamic>) {
           _user = User.fromJson(info);
@@ -69,7 +72,10 @@ class AuthService extends ChangeNotifier {
       final data = await _client.verifyOtp(phone, code);
       if (data is Map && data.containsKey('access_token')) {
         _prefs ??= await SharedPreferences.getInstance();
-        await _prefs!.setString('token', data['access_token'] as String);
+        final prefs = _prefs;
+        if (prefs != null) {
+          await prefs.setString('token', data['access_token'] as String);
+        }
         final info = await _client.getCurrentUser();
         if (info is Map<String, dynamic>) {
           _user = User.fromJson(info);
@@ -90,7 +96,10 @@ class AuthService extends ChangeNotifier {
       if (data.containsKey('access_token')) {
         _prefs ??= await SharedPreferences.getInstance();
         final token = data['access_token'] as String;
-        await _prefs!.setString('token', token);
+        final prefs = _prefs;
+        if (prefs != null) {
+          await prefs.setString('token', token);
+        }
         _client.updateToken(token);
         final info = await _client.getCurrentUser();
         if (info is Map<String, dynamic>) {
