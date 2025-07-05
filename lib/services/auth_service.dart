@@ -20,9 +20,10 @@ class AuthService extends ChangeNotifier {
   User? get currentUser => _user;
 
   Future<void> _load() async {
-    _prefs = await SharedPreferences.getInstance();
-    final token = _prefs?.getString('token');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
     if (token != null) {
+      _prefs = prefs;
       _client.updateToken(token);
       try {
         final info = await _client.getCurrentUser();
