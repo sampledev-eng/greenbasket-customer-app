@@ -55,8 +55,9 @@ class MyApp extends StatelessWidget {
                   GoRoute(path: '/home', builder: (_, __) => const MainScreen()),
                   GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
                   GoRoute(
-                    path: '/product/:id',
-                    builder: (c, s) => ProductDetail(id: int.parse(s.params['id']!)),
+                  path: '/product/:id',
+                  builder: (context, state) =>
+                      ProductDetail(id: int.parse(state.pathParameters['id']!)),
                   ),
                 ],
               );

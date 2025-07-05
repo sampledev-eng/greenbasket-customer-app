@@ -16,14 +16,18 @@ class CartService extends ChangeNotifier {
       for (var e in data) {
         final map = e as Map<String, dynamic>;
         final product = Product(
-          id: map['product_id'] as int,
-          name: map['name'] as String,
-          price: (map['price'] as num).toDouble(),
-          description: '',
-          imageUrl: '',
-          categoryId: (map['category_id'] ?? 0) as int,
-          brand: (map['brand'] ?? '') as String,
+        id: map['id'] as int,
+        name: map['name'] as String,
+        description: map['description'] as String? ?? '',
+        brand: map['brand'] as String? ?? '',
+        mrp: (map['mrp'] as num?)?.toDouble() ??    // <-- add this
+        (map['price'] as num).toDouble(),
+        price: (map['price'] as num).toDouble(),
+        imageUrl: map['image_url'] as String? ?? '',
+        stock: map['stock'] as int? ?? 0,
+        categoryId: map['category_id'] as int? ?? 0,
         );
+
         final qty = map['quantity'] as int? ?? 1;
         _items.add(CartItem(product: product, quantity: qty));
       }
