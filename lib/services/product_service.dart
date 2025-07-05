@@ -77,6 +77,15 @@ class ProductService {
     return _cache!;
   }
 
+  Future<Product> fetchProduct(int id) async {
+    if (_auth.currentUser == null) {
+      final list = await _loadLocal();
+      return list.firstWhere((p) => p.id == id);
+    }
+    final data = await _client.get('/products/$id');
+    return Product.fromJson(data as Map<String, dynamic>);
+  }
+
   List<Product> _parseList(dynamic data) {
     return (data as List)
         .map((e) => Product.fromJson(e as Map<String, dynamic>))

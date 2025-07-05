@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
 import '../services/cart_service.dart';
-import 'main_screen.dart';
 import 'forgot_password_screen.dart';
 import 'otp_screen.dart';
 
@@ -42,10 +42,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (result == AuthResult.success) {
       final cart = context.read<CartService>();
       await cart.load();
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => const MainScreen()));
+      if (mounted) context.go('/home');
     } else if (result == AuthResult.unauthorized) {
-      Navigator.pushReplacementNamed(context, '/register');
+      if (mounted) context.go('/register');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Invalid credentials')),
@@ -124,19 +123,14 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: const Text('Login with OTP'),
                     ),
                     ElevatedButton(
-                      onPressed: () => Navigator.pushNamed(context, '/register'),
+                      onPressed: () => context.push('/register'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.grey.shade300,
                       ),
                       child: const Text('Register'),
                     ),
                     TextButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const MainScreen()));
-                      },
+                      onPressed: () => context.go('/home'),
                       child: const Text('Continue as Guest'),
                     ),
                   ],

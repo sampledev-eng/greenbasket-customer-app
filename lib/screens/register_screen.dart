@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../services/auth_service.dart';
-import 'main_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -41,8 +41,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _username.text, _email.text, _password.text);
     setState(() => _loading = false);
     if (ok && mounted) {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (_) => const MainScreen()));
+      context.go('/home');
     } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Registration failed')),
