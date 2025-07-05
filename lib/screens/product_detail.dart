@@ -46,31 +46,32 @@ class _ProductDetailState extends State<ProductDetail> {
   @override
   Widget build(BuildContext context) {
     final cart = Provider.of<CartService>(context, listen: false);
+    final product = _product;
     return Scaffold(
-      appBar: AppBar(title: Text(_product?.name ?? 'Loading')),
+      appBar: AppBar(title: Text(product?.name ?? 'Loading')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (_product != null)
-              Image.network(_product!.imageUrl, height: 200)
+            if (product != null)
+              Image.network(product.imageUrl, height: 200)
             else
               const SizedBox(height: 200),
             const SizedBox(height: 16),
-            if (_product != null)
-              Text(_product!.name,
+            if (product != null)
+              Text(product.name,
                   style: Theme.of(context).textTheme.titleLarge),
-            if (_product != null && _product!.mrp > _product!.price)
-              Text('MRP: \$${_product!.mrp.toStringAsFixed(2)}',
+            if (product != null && product.mrp > product.price)
+              Text('MRP: \$${product.mrp.toStringAsFixed(2)}',
                   style: const TextStyle(
                       decoration: TextDecoration.lineThrough,
                       color: Colors.grey)),
-            if (_product != null)
-              Text('\$${_product!.price.toStringAsFixed(2)}'),
-            if (_product != null) Text('Stock: ${_product!.stock}'),
+            if (product != null)
+              Text('\$${product.price.toStringAsFixed(2)}'),
+            if (product != null) Text('Stock: ${product.stock}'),
             const SizedBox(height: 16),
-            if (_product != null) Text(_product!.description),
+            if (product != null) Text(product.description),
             const SizedBox(height: 16),
             Row(
               children: List.generate(5, (i) {
@@ -91,9 +92,10 @@ class _ProductDetailState extends State<ProductDetail> {
             ElevatedButton(
               onPressed: () async {
                 if (_rating == 0 || _commentCtrl.text.isEmpty) return;
-                if (_product == null) return;
+                final p = product;
+                if (p == null) return;
                 final ok = await _service.submitReview(
-                    _product!.id, _rating, _commentCtrl.text);
+                    p.id, _rating, _commentCtrl.text);
                 if (ok) {
                   _commentCtrl.clear();
                   setState(() {
@@ -138,8 +140,9 @@ class _ProductDetailState extends State<ProductDetail> {
             const SizedBox(height: 8),
             ElevatedButton(
               onPressed: () async {
-                if (_product == null) return;
-                await cart.add(_product!);
+                final p = product;
+                if (p == null) return;
+                await cart.add(p);
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Added to cart')));

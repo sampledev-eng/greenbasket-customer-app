@@ -35,7 +35,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _register() async {
-    if (!_formKey.currentState!.validate()) return;
+    final form = _formKey.currentState;
+    if (form == null || !form.validate()) return;
     setState(() => _loading = true);
     final ok = await _auth.register(
         _username.text, _email.text, _password.text);
