@@ -1,26 +1,19 @@
-name: Deploy
+name: Deploy to gh-pages
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-env:
-  # 👇 what we pass to flutter build
-  FLUTTER_BASE_HREF: /greenbasket-customer-app/
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: subosito/flutter-action@v2
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
         with:
           channel: stable
 
@@ -28,27 +21,11 @@ jobs:
         run: flutter pub get
 
       - name: Build Flutter Web
-        # "$FLUTTER_BASE_HREF" gets expanded to /greenbasket-customer-app/
-        run: flutter build web --base-href="$FLUTTER_BASE_HREF"
+        run: flutter build web --base-href=/greenbasket-customer-app/
 
-      - name: Upload pages artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          path: build/web          # ← what we just generated
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
-
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: github-pages      # default artifact name from upload-pages-artifact
-
-      - name: Deploy to GitHub Pages
-        id: deploy
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: build/web
+          publish_branch: gh-pages
