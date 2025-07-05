@@ -57,7 +57,8 @@ class MyApp extends StatelessWidget {
                 return const MaterialApp(home: OfflineScreen());
               }
 
-              final _router = GoRouter(
+              final router = GoRouter(...);
+
                 routes: [
                   GoRoute(
                     path: '/',
