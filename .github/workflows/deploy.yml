@@ -27,8 +27,7 @@ jobs:
         run: flutter pub get
 
       - name: Build Flutter Web
-      - run: flutter build web --base-href=/greenbasket-customer-app/
-
+        run: flutter build web --base-href=$FLUTTER_BASE_HREF
 
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
