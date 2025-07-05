@@ -99,8 +99,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ElevatedButton(
                       onPressed: _loading ? null : _login,
                       style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.secondary),
+                        backgroundColor: Colors.grey.shade300,
+                      ),
                       child: _loading
                           ? const CircularProgressIndicator()
                           : const Text('Login'),
@@ -126,8 +126,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ElevatedButton(
                       onPressed: () => Navigator.pushNamed(context, '/register'),
                       style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Theme.of(context).colorScheme.secondary),
+                        backgroundColor: Colors.grey.shade300,
+                      ),
                       child: const Text('Register'),
                     ),
                     TextButton(

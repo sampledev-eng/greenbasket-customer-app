@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
 import '../services/product_service.dart';
+import '../services/auth_service.dart';
+import '../models/review.dart';
 
 class ProductDetail extends StatefulWidget {
   final Product product;
@@ -13,19 +15,21 @@ class ProductDetail extends StatefulWidget {
 }
 
 class _ProductDetailState extends State<ProductDetail> {
-  final ProductService _service = ProductService();
+  late final ProductService _service;
   int _rating = 0;
   final TextEditingController _commentCtrl = TextEditingController();
-  Future<List<dynamic>>? _reviewsFuture;
-  List<dynamic> _reviews = [];
+  Future<List<Review>>? _reviewsFuture;
+  List<Review> _reviews = [];
 
   @override
   void initState() {
     super.initState();
+    final auth = context.read<AuthService>();
+    _service = ProductService(auth);
     _reviewsFuture = _load();
   }
 
-  Future<List<dynamic>> _load() async {
+  Future<List<Review>> _load() async {
     final data = await _service.fetchReviews(widget.product.id);
     _reviews = data;
     return _reviews;
@@ -51,7 +55,13 @@ class _ProductDetailState extends State<ProductDetail> {
             const SizedBox(height: 16),
             Text(widget.product.name,
                 style: Theme.of(context).textTheme.titleLarge),
+            if (widget.product.mrp > widget.product.price)
+              Text('MRP: \$${widget.product.mrp.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                      decoration: TextDecoration.lineThrough,
+                      color: Colors.grey)),
             Text('\$${widget.product.price.toStringAsFixed(2)}'),
+            Text('Stock: ${widget.product.stock}'),
             const SizedBox(height: 16),
             Text(widget.product.description),
             const SizedBox(height: 16),
@@ -87,7 +97,7 @@ class _ProductDetailState extends State<ProductDetail> {
               child: const Text('Submit Review'),
             ),
             Expanded(
-              child: FutureBuilder<List<dynamic>>(
+              child: FutureBuilder<List<Review>>(
                 future: _reviewsFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -100,9 +110,9 @@ class _ProductDetailState extends State<ProductDetail> {
                   return ListView.builder(
                     itemCount: reviews.length,
                     itemBuilder: (context, index) {
-                      final c = reviews[index] as Map<String, dynamic>;
-                      final rating = c['rating'] as int? ?? 0;
-                      final text = c['comment'] ?? c['text'] ?? '';
+                      final c = reviews[index];
+                      final rating = c.rating;
+                      final text = c.comment;
                       return ListTile(
                         title: Row(
                           children: List.generate(

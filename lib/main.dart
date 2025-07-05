@@ -26,7 +26,14 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => CartService()),
         ChangeNotifierProvider(create: (_) => AuthService()),
-        ChangeNotifierProvider(create: (_) => WishlistService()),
+        ChangeNotifierProxyProvider<AuthService, WishlistService>(
+          create: (context) => WishlistService(context.read<AuthService>()),
+          update: (context, auth, wish) {
+            wish ??= WishlistService(auth);
+            wish.updateAuth(auth);
+            return wish;
+          },
+        ),
       ],
       child: Consumer<AuthService>(
         builder: (context, auth, _) {

@@ -34,4 +34,13 @@ class AddressService {
     } catch (_) {}
     return null;
   }
+
+  Future<bool> deleteAddress(int id) async {
+    try {
+      await _client.deleteAddress(id);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
 }

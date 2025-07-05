@@ -149,10 +149,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         final addr = _addresses[index];
                                         return ListTile(
                                           title: Text(addr.address),
-                                          trailing: IconButton(
-                                            icon: const Icon(Icons.edit),
-                                            onPressed: () =>
-                                                _addOrEditAddress(addr),
+                                          trailing: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(Icons.edit),
+                                                onPressed: () =>
+                                                    _addOrEditAddress(addr),
+                                              ),
+                                              IconButton(
+                                                icon: const Icon(Icons.delete),
+                                                onPressed: () async {
+                                                  final ok = await _addressService
+                                                      .deleteAddress(addr.id);
+                                                  if (ok) {
+                                                    setState(() =>
+                                                        _addresses.removeAt(index));
+                                                  } else {
+                                                    if (mounted) {
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                          const SnackBar(content: Text('Failed to delete')));
+                                                    }
+                                                  }
+                                                },
+                                              ),
+                                            ],
                                           ),
                                         );
                                       },
