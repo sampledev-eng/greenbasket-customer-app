@@ -89,7 +89,9 @@ class _CartScreenState extends State<CartScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (_) => PaymentScreen(
-                                  addressId: created.id, total: cart.total),
+                                  addressId: created.id,
+                                  total: cart.total,
+                                  items: cart.items),
                             ),
                           );
                         },

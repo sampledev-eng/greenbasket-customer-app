@@ -5,6 +5,8 @@ class ApiClient {
   static const String baseUrl = 'https://greenbasket-backend.onrender.com';
   String? _token;
 
+  bool get hasToken => _token != null;
+
   void updateToken(String? token) {
     _token = token;
   }
@@ -125,10 +127,33 @@ class ApiClient {
     return json.decode(res.body);
   }
 
+  Future<void> deleteAddress(int id) async {
+    final res =
+        await http.delete(_uri('/addresses/$id'), headers: _headers());
+    _check(res);
+  }
+
   Future<List<dynamic>> categories() async => await get('/categories');
 
   Future<dynamic> createCategory(String name) async =>
       await post('/categories', {'name': name});
 
   Future<dynamic> seed() async => await post('/seed', {});
+
+  // ─────────────────────────────────── wishlist
+  Future<List<dynamic>> wishlist() async => await get('/wishlist');
+
+  Future<dynamic> addWishlist(int productId) async =>
+      await post('/wishlist/add', {'product_id': productId});
+
+  Future<dynamic> removeWishlist(int productId) async =>
+      await post('/wishlist/remove', {'product_id': productId});
+
+  // ─────────────────────────────────── checkout
+  Future<dynamic> checkout(int addressId, List<Map<String, dynamic>> items) async {
+    return post('/checkout', {
+      'address_id': addressId,
+      'items': items,
+    });
+  }
 }

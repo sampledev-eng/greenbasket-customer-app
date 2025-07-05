@@ -1,7 +1,4 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import 'main_screen.dart';
@@ -40,52 +37,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
-    final res = await http.post(
-      Uri.parse('https://greenbasket-backend.onrender.com/register'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'email': _email.text,
-        'password': _password.text,
-        'name': _username.text,
-        'address': _address.text,
-      }),
-    );
+    final ok = await _auth.register(
+        _username.text, _email.text, _password.text);
     setState(() => _loading = false);
-    if (res.statusCode >= 200 && res.statusCode < 300 && mounted) {
-      final codeController = TextEditingController();
-      final verified = await showDialog<bool>(
-            context: context,
-            builder: (_) => AlertDialog(
-              title: const Text('Enter OTP'),
-              content: TextField(
-                controller: codeController,
-                decoration: const InputDecoration(hintText: 'OTP'),
-              ),
-              actions: [
-                TextButton(
-                    onPressed: () =>
-                        Navigator.pop(context, codeController.text == '1234'),
-                    child: const Text('Verify'))
-              ],
-            ),
-          ) ??
-          false;
-      if (verified && mounted) {
-        final result = await _auth.login(_email.text, _password.text);
-        if (result == AuthResult.success && mounted) {
-          Navigator.pushReplacement(
-              context, MaterialPageRoute(builder: (_) => const MainScreen()));
-        } else if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Login failed')), 
-          );
-        }
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('OTP verification failed')),
-        );
-      }
-    } else {
+    if (ok && mounted) {
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => const MainScreen()));
+    } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Registration failed')),
       );
@@ -129,8 +87,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ElevatedButton(
                 onPressed: _loading ? null : _register,
                 style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Theme.of(context).colorScheme.secondary),
+                  backgroundColor: Colors.grey.shade300,
+                ),
                 child: _loading
                     ? const CircularProgressIndicator()
                     : const Text('Register'),

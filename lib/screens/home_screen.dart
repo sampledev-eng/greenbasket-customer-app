@@ -9,6 +9,7 @@ import '../models/category.dart';
 import '../services/product_service.dart';
 import '../services/category_service.dart';
 import '../services/cart_service.dart';
+import '../services/auth_service.dart';
 import '../services/wishlist_service.dart';
 import '../widgets/empty_view.dart';
 import '../widgets/error_view.dart';
@@ -25,7 +26,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   // ─────────────────────────────────────── services
-  final _productService = ProductService();
+  late ProductService _productService;
   final _categoryService = CategoryService();
 
   // ─────────────────────────────────────── state
@@ -40,11 +41,14 @@ class _HomeScreenState extends State<HomeScreen> {
   int?    _selectedCat;
   String? _selectedBrand;
   String  _priceFilter = 'All';
+  String  _sort = 'None';
 
   // ─────────────────────────────────────── lifecycle
   @override
   void initState() {
     super.initState();
+    final auth = context.read<AuthService>();
+    _productService = ProductService(auth);
     _future = _loadEverything();
     // pre-load cart data once
     WidgetsBinding.instance.addPostFrameCallback((_) =>
@@ -61,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // ─────────────────────────────────────── data helpers
   Future<List<Product>> _loadEverything() async {
     try {
-      final prods = await _productService.fetchProducts();
+      final prods = await _productService.fetchFiltered();
       _all   = prods;
       _cats  = await _categoryService.fetchCategories();
       _brands = prods.map((p) => p.brand).toSet().toList();
@@ -87,23 +91,52 @@ class _HomeScreenState extends State<HomeScreen> {
       imageUrl:
           'https://picsum.photos/seed/fruit_${i + 1}/400/400', // free random pics
       price: 2.5 + i,
+      mrp: 3.0 + i,
+      stock: 20,
       categoryId: 1,
     ),
   );
+
+  Future<void> _applyFilters() async {
+    double? min;
+    double? max;
+    switch (_priceFilter) {
+      case 'Below 50':
+        max = 50;
+        break;
+      case '50-100':
+        min = 50;
+        max = 100;
+        break;
+      case 'Above 100':
+        min = 100;
+        break;
+    }
+    final sortKey = _sort == 'Price \u2191'
+        ? 'price_asc'
+        : _sort == 'Price \u2193'
+            ? 'price_desc'
+            : null;
+    final results = await _productService.fetchFiltered(
+      brand: _selectedBrand,
+      category: _selectedCat,
+      minPrice: min,
+      maxPrice: max,
+      search: _searchCtrl.text.isEmpty ? null : _searchCtrl.text,
+      sort: sortKey,
+    );
+    if (!mounted) return;
+    setState(() {
+      _all = results;
+      _brands = results.map((p) => p.brand).toSet().toList();
+    });
+  }
 
   // ─────────────────────────────────────── search
   void _onSearchChanged(String value) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 300), () async {
-      final results = value.isEmpty
-          ? await _productService.fetchProducts()
-          : await _productService.searchProducts(value);
-
-      if (!mounted) return;
-      setState(() {
-        _all = results;
-        _brands = results.map((p) => p.brand).toSet().toList();
-      });
+      await _applyFilters();
     });
   }
 
@@ -187,6 +220,8 @@ class _HomeScreenState extends State<HomeScreen> {
           Expanded(child: _brandDrop()),
           const SizedBox(width: 8),
           Expanded(child: _priceDrop()),
+          const SizedBox(width: 8),
+          Expanded(child: _sortDrop()),
         ]),
       );
 
@@ -197,7 +232,10 @@ class _HomeScreenState extends State<HomeScreen> {
         items: _brands
             .map((b) => DropdownMenuItem(value: b, child: Text(b)))
             .toList(),
-        onChanged: (v) => setState(() => _selectedBrand = v),
+        onChanged: (v) {
+          setState(() => _selectedBrand = v);
+          _applyFilters();
+        },
       );
 
   DropdownButton<String> _priceDrop() => DropdownButton<String>(
@@ -206,7 +244,22 @@ class _HomeScreenState extends State<HomeScreen> {
         items: const ['All', 'Below 50', '50-100', 'Above 100']
             .map((p) => DropdownMenuItem(value: p, child: Text(p)))
             .toList(),
-        onChanged: (v) => setState(() => _priceFilter = v ?? 'All'),
+        onChanged: (v) {
+          setState(() => _priceFilter = v ?? 'All');
+          _applyFilters();
+        },
+      );
+
+  DropdownButton<String> _sortDrop() => DropdownButton<String>(
+        isExpanded: true,
+        value: _sort,
+        items: const ['None', 'Price \u2191', 'Price \u2193']
+            .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+            .toList(),
+        onChanged: (v) {
+          setState(() => _sort = v ?? 'None');
+          _applyFilters();
+        },
       );
 
   Widget _promoBanner() => Padding(
@@ -235,13 +288,16 @@ class _HomeScreenState extends State<HomeScreen> {
           scrollDirection: Axis.horizontal,
           children: _cats
               .map((c) => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: ChoiceChip(
-                      label: Text(c.name),
-                      selected: _selectedCat == c.id,
-                      onSelected: (_) => setState(() =>
-                          _selectedCat = _selectedCat == c.id ? null : c.id),
-                    ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: ChoiceChip(
+                    label: Text(c.name),
+                    selected: _selectedCat == c.id,
+                    onSelected: (_) {
+                      setState(() =>
+                          _selectedCat = _selectedCat == c.id ? null : c.id);
+                      _applyFilters();
+                    },
+                  ),
                   ))
               .toList(),
         ),
@@ -293,7 +349,20 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text('\$${p.price.toStringAsFixed(2)}'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (p.mrp > p.price)
+                    Text('MRP: \$${p.mrp.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                            decoration: TextDecoration.lineThrough,
+                            fontSize: 12,
+                            color: Colors.grey)),
+                  Text('\$${p.price.toStringAsFixed(2)}'),
+                  Text('Stock: ${p.stock}',
+                      style: const TextStyle(fontSize: 12)),
+                ],
+              ),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

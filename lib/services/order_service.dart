@@ -1,5 +1,6 @@
 import '../models/order.dart';
 import '../models/backend_order.dart';
+import '../models/cart_item.dart';
 import 'api_client.dart';
 import 'notification_service.dart';
 
@@ -16,6 +17,20 @@ class OrderService {
       final order = BackendOrder.fromJson(data);
       _orders.add(order);
       return order;
+    }
+    return null;
+  }
+
+  Future<String?> checkout(int addressId, List<CartItem> items) async {
+    final list = items
+        .map((e) => {'product_id': e.product.id, 'quantity': e.quantity})
+        .toList();
+    final data = await _client.checkout(addressId, list);
+    if (data is Map<String, dynamic>) {
+      if (data['payment_url'] != null) return data['payment_url'] as String;
+      if (data['transaction_id'] != null) {
+        return data['transaction_id'].toString();
+      }
     }
     return null;
   }
