@@ -41,31 +41,61 @@ class MyApp extends StatelessWidget {
         builder: (context, auth, _) {
           if (!auth.initialized) {
             return const MaterialApp(
-                home: Scaffold(body: Center(child: CircularProgressIndicator())));
+              home: Scaffold(body: Center(child: CircularProgressIndicator())),
+            );
           }
           return StreamBuilder<ConnectivityResult>(
             stream: Connectivity().onConnectivityChanged,
             builder: (context, snapshot) {
-              if (snapshot.hasData && snapshot.data == ConnectivityResult.none) {
+              if (!snapshot.hasData) {
+                return const MaterialApp(
+                  home: Scaffold(body: Center(child: CircularProgressIndicator())),
+                );
+              }
+
+              if (snapshot.data == ConnectivityResult.none) {
                 return const MaterialApp(home: OfflineScreen());
               }
+
               final _router = GoRouter(
                 routes: [
-                  GoRoute(path: '/', builder: (_, __) => const LoginScreen()),
-                  GoRoute(path: '/home', builder: (_, __) => const MainScreen()),
-                  GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
                   GoRoute(
-                  path: '/product/:id',
-                  builder: (context, state) =>
-                      ProductDetail(id: int.parse(state.pathParameters['id']!)),
+                    path: '/',
+                    builder: (_, __) => const LoginScreen(),
+                  ),
+                  GoRoute(
+                    path: '/home',
+                    builder: (_, __) => const MainScreen(),
+                  ),
+                  GoRoute(
+                    path: '/register',
+                    builder: (_, __) => const RegisterScreen(),
+                  ),
+                  GoRoute(
+                    path: '/product/:id',
+                    builder: (context, state) {
+                      final idParam = state.pathParameters['id'];
+                      if (idParam == null) {
+                        return const Scaffold(
+                          body: Center(child: Text('Invalid product ID')),
+                        );
+                      }
+                      final parsedId = int.tryParse(idParam);
+                      if (parsedId == null) {
+                        return const Scaffold(
+                          body: Center(child: Text('Invalid product ID format')),
+                        );
+                      }
+                      return ProductDetail(id: parsedId);
+                    },
                   ),
                 ],
               );
+
               return MaterialApp.router(
                 title: 'GreenBasket',
                 theme: ThemeData(
-                  colorScheme:
-                      ColorScheme.fromSeed(seedColor: const Color(0xFF6AA84F)),
+                  colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6AA84F)),
                   textTheme: GoogleFonts.poppinsTextTheme(),
                 ),
                 routeInformationParser: _router.routeInformationParser,
