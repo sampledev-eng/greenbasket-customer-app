@@ -42,13 +42,13 @@ class ApiClient {
 
   // High level helpers for backend endpoints
   Future<dynamic> register(String username, String email, String password) async {
-    return post('/register',
+        return post('/auth/register',
         {'name': username, 'email': email, 'password': password});
   }
 
   Future<dynamic> login(String email, String password) async {
     final data =
-        await post('/login', {'email': email, 'password': password});
+        await post('/auth/login', {'email': email, 'password': password});
     if (data is Map && data.containsKey('access_token')) {
       updateToken(data['access_token']);
     }
