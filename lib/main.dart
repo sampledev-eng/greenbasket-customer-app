@@ -38,7 +38,11 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProxyProvider<AuthService, WishlistService>(
           create: (ctx) => WishlistService(ctx.read<AuthService>()),
-          update: (ctx, auth, prev) => prev!..updateAuth(auth),
+          update: (ctx, auth, prev) {
+            final service = prev ?? WishlistService(auth);
+            service.updateAuth(auth);
+            return service;
+          },
         ),
       ],
       child: Consumer<AuthService>(
