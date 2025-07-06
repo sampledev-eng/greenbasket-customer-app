@@ -19,7 +19,7 @@ import 'services/notification_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // flutter_local_notifications crashes on Web – skip there
+  // `flutter_local_notifications` crashes on Web – only init on mobile / desktop
   if (!kIsWeb) {
     await NotificationService.init();
   }
@@ -28,7 +28,7 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -38,11 +38,12 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProxyProvider<AuthService, WishlistService>(
           create: (ctx) => WishlistService(ctx.read<AuthService>()),
-          update: (ctx, auth, prev) => (prev!..updateAuth(auth)),
+          update: (ctx, auth, prev) => prev!..updateAuth(auth),
         ),
       ],
       child: Consumer<AuthService>(
         builder: (context, auth, _) {
+          // Wait for SharedPreferences/token load
           if (!auth.initialized) {
             return const MaterialApp(
               home: Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -58,16 +59,26 @@ class MyApp extends StatelessWidget {
                 );
               }
 
+              // Offline fallback
               if (snap.data == ConnectivityResult.none) {
                 return const MaterialApp(home: OfflineScreen());
               }
 
-              // ---------------- ROUTES ----------------
+              // ─── GoRouter config ─────────────────────────────────────────────
               final router = GoRouter(
                 routes: [
-                  GoRoute(path: '/', builder: (_, __) => const LoginScreen()),
-                  GoRoute(path: '/home', builder: (_, __) => const MainScreen()),
-                  GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+                  GoRoute(
+                    path: '/',
+                    builder: (_, __) => const LoginScreen(),
+                  ),
+                  GoRoute(
+                    path: '/home',
+                    builder: (_, __) => const MainScreen(),
+                  ),
+                  GoRoute(
+                    path: '/register',
+                    builder: (_, __) => const RegisterScreen(),
+                  ),
                   GoRoute(
                     path: '/product/:id',
                     builder: (context, state) {
@@ -83,7 +94,7 @@ class MyApp extends StatelessWidget {
                   ),
                 ],
               );
-              // ----------------------------------------
+              // ────────────────────────────────────────────────────────────────
 
               return MaterialApp.router(
                 title: 'GreenBasket',
@@ -91,7 +102,7 @@ class MyApp extends StatelessWidget {
                   colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6AA84F)),
                   textTheme: GoogleFonts.poppinsTextTheme(),
                 ),
-                routerConfig: router,
+                routerConfig: router, // go_router ≥ 6.0
               );
             },
           );
