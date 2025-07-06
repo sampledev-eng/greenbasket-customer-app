@@ -18,12 +18,7 @@ import 'services/notification_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // `flutter_local_notifications` crashes on Web – only init on mobile / desktop
-  if (!kIsWeb) {
-    await NotificationService.init();
-  }
-
+  if (!kIsWeb) await NotificationService.init();
   runApp(const MyApp());
 }
 
@@ -38,16 +33,15 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthService()),
         ChangeNotifierProxyProvider<AuthService, WishlistService>(
           create: (ctx) => WishlistService(ctx.read<AuthService>()),
-          update: (ctx, auth, prev) {
-            final service = prev ?? WishlistService(auth);
-            service.updateAuth(auth);
-            return service;
+          update: (ctx, auth, previous) {
+            previous ??= WishlistService(auth);
+            previous.updateAuth(auth);
+            return previous;
           },
         ),
       ],
       child: Consumer<AuthService>(
         builder: (context, auth, _) {
-          // Wait for SharedPreferences/token load
           if (!auth.initialized) {
             return const MaterialApp(
               home: Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -55,39 +49,23 @@ class MyApp extends StatelessWidget {
           }
 
           return StreamBuilder<ConnectivityResult>(
+            initialData: ConnectivityResult.mobile,        // <-- never null
             stream: Connectivity().onConnectivityChanged,
-            builder: (context, snap) {
-              if (!snap.hasData) {
-                return const MaterialApp(
-                  home: Scaffold(body: Center(child: CircularProgressIndicator())),
-                );
-              }
-
-              // Offline fallback
-              if (snap.data == ConnectivityResult.none) {
+            builder: (context, snapshot) {
+              if (snapshot.data == ConnectivityResult.none) {
                 return const MaterialApp(home: OfflineScreen());
               }
 
-              // ─── GoRouter config ─────────────────────────────────────────────
+              // ---------------- ROUTES ----------------
               final router = GoRouter(
                 routes: [
-                  GoRoute(
-                    path: '/',
-                    builder: (_, __) => const LoginScreen(),
-                  ),
-                  GoRoute(
-                    path: '/home',
-                    builder: (_, __) => const MainScreen(),
-                  ),
-                  GoRoute(
-                    path: '/register',
-                    builder: (_, __) => const RegisterScreen(),
-                  ),
+                  GoRoute(path: '/', builder: (_, __) => const LoginScreen()),
+                  GoRoute(path: '/home', builder: (_, __) => const MainScreen()),
+                  GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
                   GoRoute(
                     path: '/product/:id',
                     builder: (context, state) {
-                      final idStr = state.pathParameters['id'];
-                      final id = int.tryParse(idStr ?? '');
+                      final id = int.tryParse(state.pathParameters['id'] ?? '');
                       if (id == null) {
                         return const Scaffold(
                           body: Center(child: Text('Invalid product ID')),
@@ -97,8 +75,10 @@ class MyApp extends StatelessWidget {
                     },
                   ),
                 ],
+                errorBuilder: (_, __) =>
+                    const Scaffold(body: Center(child: Text('Page not found'))),
               );
-              // ────────────────────────────────────────────────────────────────
+              // ----------------------------------------
 
               return MaterialApp.router(
                 title: 'GreenBasket',
@@ -106,7 +86,7 @@ class MyApp extends StatelessWidget {
                   colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF6AA84F)),
                   textTheme: GoogleFonts.poppinsTextTheme(),
                 ),
-                routerConfig: router, // go_router ≥ 6.0
+                routerConfig: router,
               );
             },
           );
